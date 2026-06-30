@@ -5,160 +5,369 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pizzería Premium - Iniciar Sesión</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* ==========================================================================
-           📷 CAMBIA AQUÍ LA IMAGEN DE FONDO FÁCILMENTE
-           Puedes poner un enlace de internet o una ruta local como '/static/img/fondo.jpg'
-           ========================================================================== */
-        :root {
-            --url-fondo-pizzeria: url('https://alicante.com.ar/wp-content/uploads/2022/06/iStock-1048461158-Pizza-especial-2000x1333.jpg');
-        }
 
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Capa superpuesta: Mezcla un tono rústico de horno con la foto elegida */
-        .bg-pizza-overlay {
-            background: linear-gradient(to bottom, rgba(28, 15, 10, 0.85), rgba(12, 6, 4, 0.92)), 
-                        var(--url-fondo-pizzeria) no-repeat center center fixed;
-            background-size: cover;
-        }
-    </style>
 </head>
-<body class="bg-pizza-overlay text-amber-50/90 min-h-screen flex items-center justify-center font-sans antialiased p-4 relative">
+<body class="text-amber-50/90 min-h-screen flex items-center justify-center font-sans antialiased p-4 relative overflow-x-hidden">
+    <div id="bg-imagen" class="bg-pizza-overlay"></div>
+    
+    <div id="overlay"></div>
+    <div id="contenedorToasts" class="fixed top-6 right-6 z-[60] space-y-4 max-w-sm w-full pointer-events-none"></div>
+        <header class="fixed top-0 left-0 w-full z-30 px-10 py-6">
 
-    <div id="contenedorToasts" class="fixed top-6 right-6 z-50 space-y-4 max-w-sm w-full pointer-events-none"></div>
+        <div class="flex items-center justify-between">
 
-    <div class="bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl w-full max-w-md border border-white/20 transition-all duration-300 hover:border-white/30 fade-in">
-        
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-stone-950 mb-4 shadow-lg shadow-orange-500/20 text-2xl font-bold">
-                <i class="fa-solid fa-fire"></i>
+            <!-- Logo -->
+
+            <div class="flex items-center gap-4">
+
+                <div
+                    class="w-14 h-14 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-2xl text-stone-900 shadow-lg">
+
+                    <i class="fa-solid fa-fire"></i>
+
+                </div>
+
+                <div>
+
+                    <h1
+                        class="text-3xl font-black uppercase tracking-widest bg-gradient-to-r from-amber-300 via-orange-400 to-red-500 bg-clip-text text-transparent">
+
+                        Pizzería El Inge
+
+                    </h1>
+
+                    <p class="text-sm text-stone-300">
+
+                        Auténtica pizza artesanal
+
+                    </p>
+
+                </div>
+
             </div>
-            
-            <h1 class="text-3xl font-black bg-gradient-to-r from-amber-400 via-orange-400 to-red-500 bg-clip-text text-transparent tracking-wider uppercase">
-                Pizzería El Inge
-            </h1>
-            <p class="text-stone-200 text-sm mt-2 font-medium">Auténtica pizza artesanal a tu mesa</p>
+
+            <!-- Botones -->
+
+            <div class="flex items-center gap-8">
+
+                <button id="btnLogin"
+                    class="font-bold text-white hover:text-orange-400 transition">
+
+                    Iniciar sesión
+
+                </button>
+
+                <button id="btnRegistro"
+                    class="bg-gradient-to-r from-red-500 to-orange-500 px-6 py-3 rounded-full font-bold text-stone-900 hover:scale-105 transition">
+
+                    Registrarse
+
+                </button>
+
+            </div>
+
         </div>
 
-        <form id="formLogin" class="space-y-6">
-            <div>
-                <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-envelope text-xs opacity-80"></i> Correo Electrónico
-                </label>
-                <input type="email" id="correo" required 
-                    placeholder="tu@correo.com"
-                    class="w-full bg-stone-950/40 border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all duration-200 backdrop-blur-sm">
-            </div>
+    </header>
 
-            <div>
-                <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-lock text-xs opacity-80"></i> Contraseña
-                </label>
-                <input type="password" id="password" required 
-                    placeholder="••••••••"
-                    class="w-full bg-stone-950/40 border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all duration-200 backdrop-blur-sm">
-            </div>
+    <!-- ================= HERO ================= -->
 
-            <button type="submit" 
-                class="w-full bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 hover:brightness-110 text-stone-950 font-black py-3.5 px-4 rounded-xl shadow-xl transform active:scale-95 transition-all duration-150 shadow-orange-500/20 tracking-wide uppercase text-xs mt-2">
-                Ingresar a la Pizzería
-            </button>
-        </form>
+    <section
+        class="min-h-screen flex items-center px-20">
 
-        <div class="text-center mt-6">
-            <p class="text-sm text-stone-300">
-                ¿Primera vez que pides? 
-                <a href="/registro" class="text-amber-400 hover:text-amber-300 font-bold transition duration-150 ml-1">Regístrate aquí</a>
+        <div class="max-w-2xl">
+
+            <p
+                class="uppercase tracking-[8px] text-orange-400 text-sm mb-4">
+
+                Bienvenido
+
             </p>
+
+            <h2
+                class="text-7xl font-black leading-tight">
+
+                El sabor de la
+
+                <span
+                    class="bg-gradient-to-r from-orange-400 via-red-500 to-yellow-400 bg-clip-text text-transparent">
+
+                    verdadera pizza
+
+                </span>
+
+            </h2>
+
+            <p
+                class="text-xl text-stone-300 mt-8 leading-9">
+
+                Vive una experiencia gastronómica única con ingredientes frescos,
+                masa artesanal y el auténtico sabor del horno.
+
+            </p>
+
+            <div class="flex gap-10 mt-12">
+
+                <div>
+
+                    <h3 class="text-4xl font-black text-orange-400">
+
+                        +5000
+
+                    </h3>
+
+                    <p class="text-stone-300">
+
+                        Clientes felices
+
+                    </p>
+
+                </div>
+
+                <div>
+
+                    <h3 class="text-4xl font-black text-orange-400">
+
+                        100%
+
+                    </h3>
+
+                    <p class="text-stone-300">
+
+                        Artesanal
+
+                    </p>
+
+                </div>
+
+                <div>
+
+                    <h3 class="text-4xl font-black text-orange-400">
+
+                        ★ 4.9
+
+                    </h3>
+
+                    <p class="text-stone-300">
+
+                        Valoración
+
+                    </p>
+
+                </div>
+
+            </div>
+
         </div>
+
+    </section>
+
+    <!-- ================= LOGIN OCULTO ================= -->
+<div id="panelPrincipal" class="panelPrincipal">
+
+    <button id="cerrarPanel"
+        class="absolute top-5 right-6 text-white text-2xl hover:text-red-400 transition">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+
+        <div id="panelLogin" class="panelContenido">
+
+            <div class="text-center mb-8">
+
+                <div
+                    class="w-16 h-16 rounded-full mx-auto bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-2xl text-black mb-4">
+
+                    <i class="fa-solid fa-fire"></i>
+
+                </div>
+
+                <h2 class="text-3xl font-black text-white">
+
+                    Iniciar Sesión
+
+                </h2>
+
+                <p class="text-stone-300">
+
+                    Bienvenido nuevamente
+
+                </p>
+
+            </div>
+
+    <form id="formLogin" class="space-y-6 text-white">
+
+        <div>
+
+            <label class="block text-sm mb-2 text-amber-300 font-bold">
+
+                Correo Electrónico
+
+            </label>
+
+            <input
+                type="email"
+                id="correo"
+                required
+                placeholder="tu@correo.com"
+                class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-orange-400"
+            >
+
+        </div>
+
+        <div>
+
+            <label class="block text-sm mb-2 text-amber-300 font-bold">
+
+                Contraseña
+
+            </label>
+
+            <input
+                type="password"
+                id="password"
+                required
+                placeholder="••••••••"
+                class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-orange-400"
+            >
+
+        </div>
+
+        <button type="submit"
+            class="w-full py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 font-bold text-black">
+
+            Ingresar a la Pizzería
+
+        </button>
+    </form>
     </div>
 
-<script>
-    // Función auxiliar elegante para mostrar mensajes integrados en el diseño
-    function mostrarNotificacion(mensaje, tipo = 'exito') {
-        const contenedor = document.getElementById('contenedorToasts');
-        const toast = document.createElement('div');
-        toast.className = `flex items-center gap-3 p-4 rounded-2xl border backdrop-blur-md shadow-xl transition-all duration-300 fade-in pointer-events-auto
-            ${tipo === 'exito' 
-                ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-200' 
-                : 'bg-red-500/20 border-red-500/30 text-red-200'}`;
-        
-        const icono = tipo === 'exito' ? 'fa-circle-check' : 'fa-circle-exclamation';
-        
-        toast.innerHTML = `
-            <i class="fa-solid ${icono} text-lg"></i>
-            <p class="text-sm font-semibold tracking-wide">${mensaje}</p>
-        `;
-        
-        contenedor.appendChild(toast);
-    }
 
-    document.getElementById('formLogin').addEventListener('submit', async (e) => {
-        e.preventDefault();
+        <!-- ================= Registro OCULTO ================= -->
 
-        const correo = document.getElementById('correo').value;
-        const password = document.getElementById('password').value;
 
-        try {
-            const respuesta = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ correo: correo, password: password })
-            });
+    <div id="panelRegistro" class="panelContenido">
 
-            const data = await respuesta.json();
+        <div class="text-center mb-8">
 
-            if (respuesta.ok) { 
-                // Cambiado el alert antiguo por la notificación elegante
-                mostrarNotificacion(`¡Bienvenido de vuelta, ${data.perfil.Nombre}!`, 'exito');
+            <div
+                class="w-16 h-16 rounded-full mx-auto bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center text-2xl text-black mb-4">
 
-                // Guardado original de variables en localStorage intacto
-                localStorage.setItem('nombre_usuario', data.perfil.Nombre);
-                localStorage.setItem('correo_usuario', data.perfil.Correo);
-                localStorage.setItem('rol_usuario', data.perfil.Rol);
-                localStorage.setItem('tipo_usuario', data.perfil.Tipo);
+                <i class="fa-solid fa-user-plus"></i>
 
-                // Esperamos un momento breve (1.5 segundos) para que disfrute el mensaje visual y redirigimos sin interrupciones
-                setTimeout(() => {
-                    if (data.perfil.Tipo === 'cliente') {
-                        localStorage.setItem('id_cliente', data.perfil.id_cliente);
-                        localStorage.setItem('direccion_cliente', data.perfil.Direccion);
-                        window.location.href = '/index'; 
-                        return;
-                    }
+            </div>
 
-                    const rol = data.perfil.Rol.toLowerCase();
+            <h2 class="text-3xl font-black text-white">
 
-                    if (rol === 'admin' || rol === 'administrador') {
-                        window.location.href = '/admin';
-                    } else if (rol === 'cocina' || rol === 'cocinero') {
-                        window.location.href = '/cocina';
-                    } else if (rol === 'mesero') {
-                        window.location.href = '/mesero';
-                    } else if (rol === 'cajero') {
-                        window.location.href = '/cajero';
-                    } else {
-                        window.location.href = '/index';
-                    }
-                }, 1500);
+                Crear Cuenta
 
-            } else {
-                mostrarNotificacion(data.mensaje || 'Error en las credenciales', 'error');
-            }
+            </h2>
 
-        } catch (error) {
-            console.error('Error de conexión:', error);
-            mostrarNotificacion('No se pudo conectar con el servidor de Flask.', 'error');
-        }
-    });
-</script>
+            <p class="text-stone-300">
+
+                Regístrate para comenzar
+
+            </p>
+
+        </div>
+
+        <form id="formRegistro" class="space-y-6 text-white">
+
+            <div>
+
+                <label class="block text-sm mb-2 text-amber-300 font-bold">
+                    Nombre
+                </label>
+
+                <input type="text" id="reg_nombre"
+                    required
+                    placeholder="Tu nombre"
+                    class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
+
+            </div>
+
+
+            <div>
+
+                <label class="block text-sm mb-2 text-amber-300 font-bold">
+                    Apellido
+                </label>
+
+                <input type="text" id="reg_apellido"
+                    required
+                    placeholder="Tu apellido"
+                    class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
+
+            </div>
+
+
+            <div>
+
+                <label class="block text-sm mb-2 text-amber-300 font-bold">
+                    Correo
+                </label>
+
+                <input type="email" id="reg_correo"
+                    required
+                    placeholder="Tu correo electrónico"
+                    class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
+
+            </div>
+
+            <div>
+
+                <label class="block text-sm mb-2 text-amber-300 font-bold">
+                    Contraseña
+                </label>
+
+                <input type="password" id="reg_password"
+                    required
+                    placeholder="Tu contraseña"
+                    class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
+
+            </div>
+
+
+            <div>
+
+                <label class="block text-sm mb-2 text-amber-300 font-bold">
+                    Telefono
+                </label>
+
+                <input type="text" id="reg_telefono"
+                    required
+                    placeholder="Tu número de teléfono"
+                    class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
+
+            </div>
+
+            <div>
+
+                <label class="block text-sm mb-2 text-amber-300 font-bold">
+                    Direccion
+                </label>
+
+                <input type="text" id="reg_direccion"
+                    required
+                    placeholder="Tu dirección"
+                    class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
+
+            </div>
+
+            <button type="submit"
+                class="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 font-bold text-black">
+
+                Crear cuenta
+
+            </button>
+
+        </form>
+
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
+
 </html>

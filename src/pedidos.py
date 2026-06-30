@@ -1,7 +1,7 @@
 from database.db import conectar_db
 from datetime import datetime
 
-def registrar_pedidos_mesa (numero_mesa, id_usuario, lista_producto):
+def registrar_pedidos_mesa(numero_mesa, id_usuario, lista_producto):
     db=conectar_db()
     if db is None:
         return False
@@ -48,8 +48,6 @@ def obtener_pedido():
         return []
     cursor = db.cursor(dictionary=True)
 
-    # Agregamos ORDER BY pe.id_pedido DESC para que los nuevos aparezcan primero 
-    # y los datos sean consistentes
     consulta_sql = """SELECT 
                         pe.id_pedido, 
                         pe.numero_mesa, 
@@ -67,8 +65,7 @@ def obtener_pedido():
                     LEFT JOIN detalle_pedido dp ON pe.id_pedido = dp.id_pedido
                     LEFT JOIN productos p ON p.id_producto = dp.id_producto
                     LEFT JOIN clientes cl ON cl.id_cliente = pe.id_cliente
-                    ORDER BY pe.id_pedido DESC""" # Orden importante
-
+                    ORDER BY pe.id_pedido DESC"""
     pedidos_agrupados = {}
 
     try:
@@ -83,7 +80,7 @@ def obtener_pedido():
                 pedidos_agrupados[id_actual] = {
                     'id_pedido': id_actual,
                     'numero_mesa': fila['numero_mesa'],
-                    'id_cliente': fila['id_cliente'], # Esto es lo que usas para filtrar en app.py
+                    'id_cliente': fila['id_cliente'], 
                     'origen_pedido': origen,
                     'fecha_p': fila['fecha_p'],
                     'total_p': fila['total_p'],
@@ -92,7 +89,7 @@ def obtener_pedido():
                     'productos': []
                 }
             
-            # Solo agregamos productos si realmente existen (evita errores con pedidos vacíos)
+
             if fila['id_producto'] is not None:
                 pedidos_agrupados[id_actual]['productos'].append({
                     'id_producto': fila['id_producto'],

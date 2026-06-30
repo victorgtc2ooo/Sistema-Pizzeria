@@ -199,7 +199,7 @@ def api_registrar_pedido_local():
     if resultado is True:
         return jsonify({"mensaje" : "El pedido ha sido registrado exitosamente"}), 200
     else:
-        return jsonify({"mensaje" : "El pedido no pudo ser registrado"}), 401
+        return jsonify({"mensaje" : "El pedido no pudo ser registrado"}), 500
 
 
 
@@ -207,7 +207,10 @@ def api_registrar_pedido_local():
 @app.route('/api/registrar_cliente', methods=['POST'])
 def api_registrar_cliente():
     datos = request.get_json()
-    
+
+    if not datos:
+        return jsonify({"mensaje": "No se recibieron datos"}), 400
+
     nombre = datos.get('nombre')
     apellido = datos.get('apellido')
     correo = datos.get('correo')
@@ -215,12 +218,18 @@ def api_registrar_cliente():
     telefono = datos.get('telefono')
     direccion = datos.get('direccion')
 
-    exito = registrar_clientes(nombre, apellido, correo, password, telefono, direccion)
-    
+    if not all([nombre, apellido, correo, password, telefono, direccion]):
+        return jsonify({"mensaje": "Todos los campos son obligatorios"}), 400
+
+    exito, mensaje = registrar_clientes(nombre, apellido, correo, password, telefono, direccion)
+
     if exito:
-        return jsonify({"mensaje": "Cliente registrado con éxito"}), 201
-    else:
-        return jsonify({"error": "No se pudo registrar al cliente"}), 500
+        return jsonify({"mensaje": mensaje}), 201
+
+    if "correo ya está registrado" in mensaje.lower():
+        return jsonify({"mensaje": mensaje}), 409
+
+    return jsonify({"mensaje": mensaje}), 500
 
 
 
@@ -232,35 +241,30 @@ def api_registrar_cliente():
 @app.route('/api/pedido_domicilio', methods=['POST'])
 def api_pedido_domicilio():
     datos = request.get_json()
-    
     id_cliente = datos.get('id_cliente')
     productos = datos.get('productos') 
     metodo_pago = datos.get('metodo_pago', 'efectivo')
     numero_tarjeta = datos.get('numero_tarjeta', '')
 
     if not id_cliente or not productos:
-        return jsonify({"error": "Faltan datos obligatorios (cliente o productos)"}), 400
-    estado_pago_simulado = 'Pendiente'
+        return jsonify({"error": "Faltan datos"}), 400
 
+    # 1. Registrar pedido (siempre entra como 'Pendiente' según tu función)
+    id_pedido = registrar_pedido_domicilio(id_cliente, None, productos)
+    
+    if not id_pedido:
+        return jsonify({"error": "No se pudo procesar el pedido"}), 500
+
+    # 2. Si el pago fue con tarjeta, actualizamos el estado a 'Pagado'
     if metodo_pago == 'tarjeta':
         tarjeta_limpia = numero_tarjeta.replace(" ", "")
-        
         if tarjeta_limpia == '4242424242424242':
-            estado_pago_simulado = 'Pagado'
+            # Llamamos a la función que ya tienes para cambiar estados
+            actualizar_pedidos(id_pedido, 'Pagado')
         else:
-            return jsonify({
-                "error": "Transacción rechazada: La tarjeta simulada no cuenta con fondos suficientes o es inválida. Usa la tarjeta de pruebas."
-            }), 402
+            return jsonify({"error": "Tarjeta inválida"}), 402
 
-    exito = registrar_pedido_domicilio(id_cliente, None, productos)
-    
-    if exito:
-        return jsonify({
-            "mensaje": "Pedido a domicilio procesado con éxito",
-            "estado_pago": estado_pago_simulado
-        }), 201
-    else:
-        return jsonify({"error": "No se pudo procesar el pedido a domicilio"}), 500
+    return jsonify({"mensaje": "Pedido procesado con éxito", "id_pedido": id_pedido}), 201
 
 
 @app.route('/api/usuarios/registrar_empleado', methods=['POST'])
@@ -699,4 +703,5 @@ def eliminar_ingrediente_receta(id_producto, id_inventario):
 
 
 if __name__== '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000,debug=True)
+    

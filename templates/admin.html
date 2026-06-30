@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Fondo general con la imagen desenfocada de fondo como en el catálogo */
         body {
@@ -30,6 +31,16 @@
         .glass-input-bg {
             background-color: rgba(107, 95, 91, 0.35);
             border: 1px solid rgba(107, 95, 91, 0.35);
+        }
+
+        select.glass-input-bg {
+            background-color: rgba(20, 18, 16, 0.92);
+            color: #f8f5f2;
+        }
+
+        select.glass-input-bg option {
+            background-color: rgba(20, 18, 16, 0.96);
+            color: #f8f5f2;
         }
 
         .scrollbar-none::-webkit-scrollbar {
@@ -569,6 +580,27 @@
                     </div>
                 </div>
 
+            </div>
+            <!-- Estadísticas de ventas: productos más vendidos y recaudación -->
+            <div class="glass-card rounded-3xl p-6 shadow-xl">
+                <div class="p-4 border-b border-white/5 bg-black/10 mb-4 flex items-center justify-between">
+                    <h3 class="font-bold text-[#f4ad42] text-sm flex items-center gap-2"><i class="fa-solid fa-chart-pie"></i> Estadísticas de Productos</h3>
+                    <div class="text-sm text-stone-300">Resumen rápido de productos vendidos</div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                    <div class="md:col-span-2 bg-transparent">
+                        <canvas id="chart-productos-top" height="220"></canvas>
+                    </div>
+                    <div class="bg-transparent">
+                        <div class="text-sm text-stone-300 mb-2">Total Recaudado</div>
+                        <div id="total-recaudacion" class="text-3xl font-extrabold text-amber-400">$0.00</div>
+                        <div class="mt-4 text-sm text-stone-300">Total Unidades Vendidas: <span id="total-unidades">0</span></div>
+                        <div class="mt-6">
+                            <canvas id="chart-revenue-productos" height="180"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <script>
@@ -1620,6 +1652,7 @@
                     const ventas = await respuesta.json();
                     ventasLocales = ventas;
                     renderizarTablaVentas(ventas);
+                    if (typeof renderEstadisticasVentas === 'function') renderEstadisticasVentas(ventas);
                 } catch (error) {
                     console.error("Error al cargar historial:", error);
                     mostrarNotificacion("No se pudo obtener el historial de ventas.", "error");
@@ -1677,20 +1710,40 @@
                 });
             }
 
-            // 3. Motor de filtrado en tiempo real sin recargar página
+            // 3. Motor de filtrado en tiempo real sin recargar página (incluye filtro por fecha)
             function filtrarVentas() {
                 const termino = document.getElementById('buscar-venta').value.toLowerCase().trim();
-                if (!termino) {
-                    renderizarTablaVentas(ventasLocales);
-                    return;
+                const fechaFiltro = document.getElementById('filtro-fecha-venta').value; // formato yyyy-mm-dd
+
+                // Empezamos con la lista completa
+                let filtrados = ventasLocales.slice();
+
+                // Filtrar por término si existe
+                if (termino) {
+                    filtrados = filtrados.filter(v =>
+                        v.id_pedido.toString().includes(termino) ||
+                        (v.origen_pedido || '').toLowerCase().includes(termino) ||
+                        (v.estado || '').toLowerCase().includes(termino) ||
+                        (v.productos || []).some(p => (p.nombre_pr || '').toLowerCase().includes(termino))
+                    );
                 }
 
-                const filtrados = ventasLocales.filter(v =>
-                    v.id_pedido.toString().includes(termino) ||
-                    v.origen_pedido.toLowerCase().includes(termino) ||
-                    v.estado.toLowerCase().includes(termino)
-                );
+                // Filtrar por fecha si hay una seleccionada
+                if (fechaFiltro) {
+                    filtrados = filtrados.filter(v => {
+                        if (!v.fecha_p) return false;
+                        const d = new Date(v.fecha_p);
+                        if (isNaN(d)) return false;
+                        const yyyy = d.getFullYear();
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        return `${yyyy}-${mm}-${dd}` === fechaFiltro;
+                    });
+                }
+
                 renderizarTablaVentas(filtrados);
+                // Actualizar estadísticas y gráficos según el conjunto filtrado
+                if (typeof renderEstadisticasVentas === 'function') renderEstadisticasVentas(filtrados);
             }
 
             async function cargarVentas() {
@@ -1704,9 +1757,92 @@
                     const ventas = await respuesta.json();
                     ventasLocales = ventas; // Guardamos para el filtro
                     renderizarTablaVentas(ventas);
+                    if (typeof renderEstadisticasVentas === 'function') renderEstadisticasVentas(ventas);
                 } catch (error) {
                     console.error("Error al cargar ventas:", error);
                     tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-red-400">Error al cargar datos. Verifica el servidor.</td></tr>`;
+                }
+            }
+
+            // Gráficos y estadísticas de ventas
+            let chartTopProductos = null;
+            let chartRevenueProductos = null;
+
+            function formatCurrency(value) {
+                const n = Number(value || 0);
+                return '$' + n.toFixed(2);
+            }
+
+            function calcularEstadisticasVentas(listaVentas) {
+                const mapa = {};
+                let totalRevenue = 0;
+                let totalUnits = 0;
+
+                listaVentas.forEach(v => {
+                    totalRevenue += Number(v.total_p) || 0;
+                    (v.productos || []).forEach(p => {
+                        const id = p.id_producto;
+                        const name = p.nombre_pr || 'Sin nombre';
+                        const qty = Number(p.cantidad_v) || 0;
+                        const rev = (Number(p.precio_unitario) || 0) * qty;
+                        totalUnits += qty;
+                        if (!mapa[id]) mapa[id] = { id, name, qty: 0, revenue: 0 };
+                        mapa[id].qty += qty;
+                        mapa[id].revenue += rev;
+                    });
+                });
+
+                const products = Object.values(mapa).sort((a, b) => b.qty - a.qty);
+                return { totalRevenue, totalUnits, products };
+            }
+
+            function renderEstadisticasVentas(listaVentas) {
+                const stats = calcularEstadisticasVentas(listaVentas || []);
+                const totalRecEl = document.getElementById('total-recaudacion');
+                const totalUnidEl = document.getElementById('total-unidades');
+                if (totalRecEl) totalRecEl.innerText = formatCurrency(stats.totalRevenue);
+                if (totalUnidEl) totalUnidEl.innerText = stats.totalUnits;
+
+                // Top productos por cantidad (pie)
+                const topByQty = stats.products.slice(0, 6);
+                const labels = topByQty.map(p => p.name);
+                const dataQty = topByQty.map(p => p.qty);
+                const colors = ['#f59e0b', '#ef4444', '#34d399', '#60a5fa', '#a78bfa', '#f472b6'];
+
+                if (chartTopProductos) chartTopProductos.destroy();
+                const ctx1 = document.getElementById('chart-productos-top')?.getContext('2d');
+                if (ctx1) {
+                    chartTopProductos = new Chart(ctx1, {
+                        type: 'pie',
+                        data: {
+                            labels: labels,
+                            datasets: [{ data: dataQty, backgroundColor: colors.slice(0, labels.length) }]
+                        },
+                        options: { plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
+
+                // Top productos por recaudación (bar)
+                const topByRevenue = stats.products.slice().sort((a, b) => b.revenue - a.revenue).slice(0, 6);
+                const labelsR = topByRevenue.map(p => p.name);
+                const dataRev = topByRevenue.map(p => Number(p.revenue.toFixed(2)));
+
+                if (chartRevenueProductos) chartRevenueProductos.destroy();
+                const ctx2 = document.getElementById('chart-revenue-productos')?.getContext('2d');
+                if (ctx2) {
+                    chartRevenueProductos = new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: labelsR,
+                            datasets: [{ label: 'Recaudación', data: dataRev, backgroundColor: '#e05c3e' }]
+                        },
+                        options: {
+                            scales: { y: { beginAtZero: true, ticks: { callback: v => formatCurrency(v) } } },
+                            plugins: { legend: { display: false } },
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
                 }
             }
 

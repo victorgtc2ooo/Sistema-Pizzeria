@@ -4,25 +4,39 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 def registrar_clientes(nombre, apellido, correo, password, telefono, direccion):
-    pass_hasheado=generate_password_hash(password)
+    if not all([nombre, apellido, correo, password, telefono, direccion]):
+        return False, "Todos los campos son obligatorios"
 
-    db=conectar_db()
+    db = conectar_db()
 
     if db is None:
-        return False
-    
-    cursor=db.cursor()
+        return False, "Error de conexión"
 
-    consulta_sql="INSERT INTO clientes (nombre_cl, apellido_cl, correo_cl, contraseña_cl, telefono_cl, direccion) VALUES (%s,%s,%s,%s,%s,%s)"
-    valores=(nombre,apellido,correo,pass_hasheado,telefono,direccion)
-    cursor.execute(consulta_sql,valores)
+    cursor = db.cursor()
 
-    db.commit()
+    try:
+        cursor.execute("SELECT 1 FROM clientes WHERE correo_cl = %s", (correo,))
+        if cursor.fetchone():
+            return False, "El correo ya está registrado"
 
-    cursor.close()
-    db.close()
+        cursor.execute("SELECT 1 FROM usuarios WHERE correo_u = %s", (correo,))
+        if cursor.fetchone():
+            return False, "El correo ya está registrado"
 
-    return True
+        pass_hasheado = generate_password_hash(password)
+        consulta_sql = "INSERT INTO clientes (nombre_cl, apellido_cl, correo_cl, contraseña_cl, telefono_cl, direccion) VALUES (%s,%s,%s,%s,%s,%s)"
+        valores = (nombre, apellido, correo, pass_hasheado, telefono, direccion)
+        cursor.execute(consulta_sql, valores)
+
+        db.commit()
+        return True, "Cliente registrado con éxito"
+    except Exception as e:
+        print(f"Error al registrar cliente: {e}")
+        db.rollback()
+        return False, "No se pudo registrar el cliente"
+    finally:
+        cursor.close()
+        db.close()
 
 
 def validar_clientes(correo, password):

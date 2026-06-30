@@ -28,9 +28,31 @@
         }
 
         .bg-pizza-overlay {
-            background: linear-gradient(to bottom, rgba(28, 15, 10, 0.85), rgba(12, 6, 4, 0.92)), 
+            background: linear-gradient(to bottom, rgba(75, 67, 66, 0.85), rgba(41, 24, 18, 0.92)), 
                         var(--url-fondo-pizzeria) no-repeat center center fixed;
             background-size: cover;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16);
+        }
+
+        .glass-soft {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.18);
         }
     </style>
 </head>
@@ -38,13 +60,13 @@
 
     <div id="contenedorToasts" class="fixed top-6 right-6 z-50 space-y-4 max-w-sm w-full pointer-events-none"></div>
 
-    <nav class="bg-white/10 backdrop-blur-md border-b border-white/20 px-6 py-4 flex justify-between items-center sticky top-0 z-50 transition-all duration-300">
+        <nav class="glass-panel border-b border-white/20 px-6 py-4 flex justify-between items-center sticky top-0 z-50 transition-all duration-300">
         <h1 class="text-2xl font-black bg-gradient-to-r from-amber-400 via-orange-400 to-red-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-200 cursor-pointer tracking-wider">
             PIZZERÍA EL INGE
         </h1>
         <div class="flex items-center gap-4">
-            <span id="nombreUsuario" class="text-amber-100/90 text-sm font-medium tracking-wide bg-white/10 px-3 py-1.5 rounded-xl border border-white/10"></span>
-            <button onclick="cerrarSesion()" class="text-xs bg-red-500/20 hover:bg-red-500/40 text-red-300 hover:text-white border border-red-500/30 px-4 py-2 rounded-xl transition-all duration-200 active:scale-95 font-semibold">
+            <span id="nombreUsuario" class="text-amber-100/90 text-sm font-medium tracking-wide glass-soft px-3 py-1.5 rounded-xl border border-white/10"></span>
+            <button onclick="cerrarSesion()" class="text-xs glass-soft hover:bg-red-500/40 text-red-300 hover:text-white border border-red-500/30 px-4 py-2 rounded-xl transition-all duration-200 active:scale-95 font-semibold">
                 Salir
             </button>
         </div>
@@ -53,7 +75,7 @@
     <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         <div class="lg:col-span-2 space-y-8">
-            <div class="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-2xl">
+            <div class="glass-panel p-6 rounded-3xl shadow-2xl">
                 <h2 class="text-xs font-bold tracking-widest text-amber-400 uppercase mb-4 flex items-center gap-2">
                     <span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping"></span> Nuestras Especialidades
                 </h2>
@@ -63,18 +85,18 @@
             </div>
 
             <div>
-                <h2 class="text-xs font-bold tracking-widest text-red-400 uppercase mb-6 bg-white/15 backdrop-blur-md border border-white/20 px-6 py-3 rounded-full w-fit shadow-lg" id="tituloCategoria">
+                <h2 class="text-xs font-bold tracking-widest text-red-400 uppercase mb-6 glass-panel glass-soft px-6 py-3 rounded-full w-fit shadow-lg" id="tituloCategoria">
                     Productos
                 </h2>
                 <div id="contenedorMenu" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <p class="text-stone-300 text-sm bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl">Selecciona una categoría para ver los productos.</p>
+                    <p class="text-stone-300 text-sm glass-panel p-6 rounded-2xl">Selecciona una categoría para ver los productos.</p>
                 </div>
             </div>
         </div>
 
         <div class="space-y-6 lg:col-span-1 sticky top-24 h-fit">
             
-            <div class="bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl shadow-2xl transition-all duration-300 hover:border-white/30">
+            <div class="glass-panel p-6 rounded-3xl shadow-2xl transition-all duration-300 hover:border-white/30">
                 <h2 class="text-lg font-bold tracking-wide text-amber-400 uppercase mb-4 border-b border-white/20 pb-2 flex items-center gap-2">
                     <i class="fa-solid fa-fire-burner text-sm text-orange-500"></i> Tu Orden
                 </h2>
@@ -99,13 +121,13 @@
                             <div>
                                 <label class="block text-xs font-semibold text-amber-400/90 uppercase tracking-wider mb-1.5">Dirección de Entrega</label>
                                 <textarea id="direccionEntrega" rows="2" placeholder="Ej: Av. de las Américas y Tarqui, frente al parque..."
-                                    class="w-full bg-stone-950/40 border border-white/20 rounded-xl px-3 py-2 text-sm text-white placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all duration-200 resize-none backdrop-blur-sm"></textarea>
+                                    class="w-full glass-soft border border-white/20 rounded-xl px-3 py-2 text-sm text-white placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all duration-200 resize-none"></textarea>
                             </div>
 
                             <div>
                                 <label class="block text-xs font-semibold text-amber-400/90 uppercase tracking-wider mb-1.5">Método de Pago</label>
                                 <select id="metodoPago" onchange="cambiarMetodoPago()"
-                                    class="w-full bg-stone-950/40 border border-white/20 rounded-xl px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-orange-500 cursor-pointer backdrop-blur-sm">
+                                    class="w-full glass-soft border border-white/20 rounded-xl px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-orange-500 cursor-pointer">
                                     <option value="efectivo">💵 Efectivo (Pagas al recibir)</option>
                                     <option value="transferencia">🏦 Transferencia Bancaria</option>
                                     <option value="tarjeta">💳 Tarjeta de Crédito / Débito</option>
@@ -113,7 +135,7 @@
                             </div>
                         </div>
 
-                        <div id="bloqueTarjeta" class="bg-stone-950/40 border border-white/20 p-4 rounded-xl space-y-3 hidden transition-all duration-300 backdrop-blur-sm">
+                        <div id="bloqueTarjeta" class="glass-soft border border-white/20 p-4 rounded-xl space-y-3 hidden transition-all duration-300">
                             <p class="text-[11px] text-amber-300 bg-amber-500/20 p-2.5 rounded-lg border border-amber-500/30 leading-relaxed">
                                 💡 <b>Modo Prototipo:</b> Usa la tarjeta de pruebas de Stripe para simular un éxito: <code class="bg-stone-900 px-1.5 py-0.5 rounded text-white font-mono border border-white/10">4242 4242 4242 4242</code>
                             </p>
@@ -127,7 +149,7 @@
                             </div>
                         </div>
 
-                        <div id="bloqueTransferencia" class="bg-stone-950/40 border border-white/20 p-4 rounded-xl text-xs space-y-1.5 text-stone-200 hidden transition-all duration-300 backdrop-blur-sm">
+                        <div id="bloqueTransferencia" class="glass-soft border border-white/20 p-4 rounded-xl text-xs space-y-1.5 text-stone-200 hidden transition-all duration-300">
                             <p class="font-bold text-amber-400 mb-1">Datos para Transferencia:</p>
                             <p><b class="text-stone-300">Banco:</b> Banco del Austro</p>
                             <p><b class="text-stone-300">Tipo:</b> Cuenta Ahorros</p>
@@ -144,7 +166,7 @@
                 </div>
             </div>
 
-            <div class="bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl shadow-2xl transition-all duration-300 hover:border-white/30 fade-in">
+            <div class="glass-panel p-6 rounded-3xl shadow-2xl transition-all duration-300 hover:border-white/30 fade-in">
                 <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
                     <div class="flex items-center gap-3">
                         <div class="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-white/10">
@@ -255,8 +277,8 @@
                 contenedor.innerHTML += `
                     <button onclick="seleccionarCategoria(${cat.id_categoria})" 
                         class="flex items-center gap-3 px-5 py-3 rounded-2xl border text-sm font-bold transition-all duration-300 whitespace-nowrap active:scale-95
-                        ${esActiva ? 'bg-gradient-to-r from-red-500 to-orange-500 border-transparent text-stone-950 shadow-xl shadow-orange-500/20' : 'bg-white/10 backdrop-blur-sm border-white/20 text-stone-100 hover:border-white/40 hover:bg-white/20'}" style="outline:none;">
-                        <img src="${srcImagen}" alt="${cat.nombre_c}" class="w-6 h-6 object-cover rounded-lg ${esActiva ? 'brightness-0' : ''}" 
+                        ${esActiva ? 'bg-gradient-to-r from-orange-400 to-red-500 border-transparent text-white shadow-xl shadow-orange-500/20' : 'bg-white/10 backdrop-blur-sm border-white/20 text-stone-100 hover:border-white/40 hover:bg-white/20'}" style="outline:none;">
+                        <img src="${srcImagen}" alt="${cat.nombre_c}" class="w-6 h-6 object-cover rounded-lg ${esActiva ? 'brightness-90' : ''}" 
                             onerror="this.src='https://cdn-icons-png.flaticon.com/512/6978/6978255.png'">
                         ${cat.nombre_c}
                     </button>
@@ -280,7 +302,7 @@
             document.getElementById('tituloCategoria').innerText = catActual ? `Menú de ${catActual.nombre_c}` : 'Productos';
 
             if(filtrados.length === 0) {
-                contenedor.innerHTML = `<p class="text-stone-300 text-sm col-span-2 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl">No hay productos disponibles en esta categoría por el momento.</p>`;
+                contenedor.innerHTML = `<p class="text-stone-300 text-sm col-span-2 glass-panel p-6 rounded-2xl">No hay productos disponibles en esta categoría por el momento.</p>`;
                 return;
             }
 
@@ -288,8 +310,8 @@
                 const srcImagen = `${RUTA_IMG_PRODUCTOS}${p.imagen_pr}`;
 
                 contenedor.innerHTML += `
-                    <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-white/40 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 transform hover:-translate-y-1 fade-in">
-                        <div class="relative h-44 bg-stone-950/40 overflow-hidden m-3 rounded-2xl border border-white/10 shadow-inner">
+                    <div class="glass-panel rounded-3xl overflow-hidden flex flex-col justify-between hover:border-white/40 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 transform hover:-translate-y-1 fade-in">
+                        <div class="relative h-44 glass-soft overflow-hidden m-3 rounded-2xl border border-white/10 shadow-inner">
                             <img src="${srcImagen}" alt="${p.nombre_pr}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" 
                                 onerror="this.src='https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=400'">
                         </div>
@@ -314,6 +336,10 @@
         function agregarAlCarrito(id_producto, nombre, precio) {
             const existe = carrito.find(item => item.id_producto === id_producto);
             if (existe) {
+                if (existe.cantidad >= 20) {
+                    mostrarNotificacion(`No puedes agregar más de 20 unidades de ${nombre}.`, 'error');
+                    return;
+                }
                 existe.cantidad++;
             } else {
                 carrito.push({ id_producto, nombre, precio, cantidad: 1 });
@@ -325,7 +351,12 @@
         function modificarCantidad(id_producto, cambio) {
             const item = carrito.find(item => item.id_producto === id_producto);
             if (item) {
-                item.cantidad += cambio;
+                const nuevaCantidad = item.cantidad + cambio;
+                if (nuevaCantidad > 20) {
+                    mostrarNotificacion(`No puedes tener más de 20 unidades de ${item.nombre}.`, 'error');
+                    return;
+                }
+                item.cantidad = nuevaCantidad;
                 if (item.cantidad <= 0) {
                     carrito = carrito.filter(i => i.id_producto !== id_producto);
                 }
@@ -342,7 +373,7 @@
             let total = 0;
 
             if (carrito.length === 0) {
-                contenedor.innerHTML = '<p class="text-stone-300 text-sm text-center py-6 fade-in bg-white/10 rounded-2xl border border-white/10">El carrito está vacío.</p>';
+                contenedor.innerHTML = '<p class="text-stone-300 text-sm text-center py-6 fade-in glass-panel rounded-2xl border border-white/10">El carrito está vacío.</p>';
                 btn.disabled = true;
                 btn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
@@ -353,7 +384,7 @@
             carrito.forEach(item => {
                 total += item.precio * item.cantidad;
                 contenedor.innerHTML += `
-                    <div class="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-2xl border border-white/10 fade-in">
+                    <div class="flex justify-between items-center glass-soft p-3 rounded-2xl border border-white/10 fade-in">
                         <div>
                             <h4 class="text-sm font-bold text-stone-100 tracking-wide">${item.nombre}</h4>
                             <p class="text-xs text-amber-400 font-semibold">$${item.precio.toFixed(2)} <span class="text-stone-300 font-normal">x ${item.cantidad}</span></p>
@@ -392,10 +423,11 @@
                 bodyPayload = {
                     numero_mesa: parseInt(numeroMesaActual),
                     id_usuario: 1, 
+                    id_cliente: idCliente ? parseInt(idCliente) : null,
                     lista_producto: productosPayload
                 };
             } else {
-                urlTarget = 'http://127.0.0.1:5000/api/pagar_domicilio';
+                urlTarget = 'http://127.0.0.1:5000/api/pedido_domicilio';
                 
                 const direccion = document.getElementById('direccionEntrega').value;
                 const metodoPago = document.getElementById('metodoPago').value;
@@ -421,7 +453,7 @@
                 bodyPayload = {
                     id_cliente: idSesion ? parseInt(idSesion) : null,
                     id_usuario: null, // Agregamos esto para evitar el KeyError
-                    lista_producto: productosPayload, // CAMBIAMOS 'productos' por 'lista_producto'
+                    productos: productosPayload,
                     metodo_pago: metodoPago,
                     numero_tarjeta: numeroTarjeta,
                     direccion: direccion
