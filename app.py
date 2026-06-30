@@ -5,7 +5,7 @@ from src.productos import registrar_producto, obtener_productos, actualizar_prod
 from src.categorias import registrar_categoria, obtener_categorias, actualizar_categoria, obtener_categorias_publicas, cambiar_estado_categoria
 from src.recetas import registrar_recetas, obtener_receta, borrar_ingrediente_de_receta
 from src.inventario import registrar_inventario, obtener_inventario,cambiar_estado_ingrediente, actualizar_inventario, sumar_stock_db
-from src.pedidos import registrar_pedidos_mesa,obtener_pedido,registrar_pedido_domicilio, actualizar_pedidos,obtener_pedidos_caja, registrar_pedido_domicilio
+from src.pedidos import registrar_pedidos_mesa,obtener_pedido,registrar_pedido_domicilio, actualizar_pedidos,obtener_pedidos_caja, registrar_pedido_domicilio, obtener_detalle_completo_pedido
 from src.clientes import registrar_clientes, validar_clientes
 from src.pagos import obtener_pagopendiente,registrar_pago_pedido
 
@@ -394,29 +394,25 @@ def api_cambiar_estado_categoria():
 def api_mis_pedidos_activos():
     try:
         id_cliente = request.args.get('id_cliente')
-        todos_los_pedidos = obtener_pedido()
-        
+
+        # Si no se proporciona id_cliente, devolvemos lista vacía por seguridad
+        if not id_cliente:
+            return jsonify([]), 200
+
+        # Pedidos ya filtrados por el backend según el cliente
+        todos_los_pedidos = obtener_pedido(int(id_cliente))
+
         if not todos_los_pedidos:
             return jsonify([]), 200
 
-        pedidos_filtrados = []
+        pedidos_activos = []
         for p in todos_los_pedidos:
             estado_crudo = p.get('estado') or p.get('estado_p')
             estado_p = str(estado_crudo).strip() if estado_crudo is not None else 'Pendiente'
-        
-            # Solo procesamos estados activos
             if estado_p not in ['Pagado', 'Entregado', 'Cancelado']:
-                
-                id_p_cliente = p.get('id_cliente')
-                
-                # --- AQUÍ ESTÁ LA LÓGICA CORREGIDA ---
-                # Comparamos ambos como STRINGS para evitar el problema de int vs str
-                if id_cliente and id_p_cliente is not None:
-                    if str(id_p_cliente).strip() == str(id_cliente).strip():
-                        pedidos_filtrados.append(p)
-                # -------------------------------------
+                pedidos_activos.append(p)
 
-        return jsonify(pedidos_filtrados), 200
+        return jsonify(pedidos_activos), 200
 
     except Exception as e:
         print(f"Error crítico en API mis_pedidos_activos: {e}")
@@ -497,7 +493,18 @@ def api_obtener_pedidos_activos():
 
 
 
+@app.route('/api/pedido/<int:id_pedido>', methods=['GET'])
+def api_obtener_detalle_pedido(id_pedido):
+    # Llama a la función que acabamos de agregar usando tu arquitectura organizada
+    resultado = obtener_detalle_completo_pedido(id_pedido)
+    
+    if resultado is None:
+        return jsonify({"mensaje": "El pedido no existe."}), 404
+        
+    if "error" in resultado:
+        return jsonify({"mensaje": "Hubo un error interno en el servidor."}), 500
 
+    return jsonify(resultado), 200
 
 
 

@@ -282,6 +282,8 @@
                 </label>
 
                 <input type="text" id="reg_nombre"
+                    maxlength="40"
+                    oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')"
                     required
                     placeholder="Tu nombre"
                     class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
@@ -296,6 +298,8 @@
                 </label>
 
                 <input type="text" id="reg_apellido"
+                    maxlength="40"
+                    oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')"
                     required
                     placeholder="Tu apellido"
                     class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
@@ -310,6 +314,7 @@
                 </label>
 
                 <input type="email" id="reg_correo"
+                    maxlength="40"
                     required
                     placeholder="Tu correo electrónico"
                     class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
@@ -323,6 +328,7 @@
                 </label>
 
                 <input type="password" id="reg_password"
+                    maxlength="30"
                     required
                     placeholder="Tu contraseña"
                     class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
@@ -336,7 +342,9 @@
                     Telefono
                 </label>
 
-                <input type="text" id="reg_telefono"
+                <input type="tel" id="reg_telefono"
+                    maxlength="10"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                     required
                     placeholder="Tu número de teléfono"
                     class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">
@@ -350,6 +358,7 @@
                 </label>
 
                 <input type="text" id="reg_direccion"
+                    maxlength="100"
                     required
                     placeholder="Tu dirección"
                     class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 focus:outline-none focus:border-green-400">

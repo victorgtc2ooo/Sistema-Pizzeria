@@ -42,12 +42,12 @@ def registrar_pedidos_mesa(numero_mesa, id_usuario, lista_producto):
         cursor.close()
         db.close()
 
-def obtener_pedido():
+def obtener_pedido(id_cliente=None):
     db = conectar_db()
     if db is None:
         return []
     cursor = db.cursor(dictionary=True)
-
+    # Construimos la consulta base y aplicamos un WHERE cuando se solicita filtrar por cliente
     consulta_sql = """SELECT 
                         pe.id_pedido, 
                         pe.numero_mesa, 
@@ -65,11 +65,21 @@ def obtener_pedido():
                     LEFT JOIN detalle_pedido dp ON pe.id_pedido = dp.id_pedido
                     LEFT JOIN productos p ON p.id_producto = dp.id_producto
                     LEFT JOIN clientes cl ON cl.id_cliente = pe.id_cliente
-                    ORDER BY pe.id_pedido DESC"""
+                    """
+
+    params = None
+    if id_cliente is not None:
+        consulta_sql += " WHERE pe.id_cliente = %s"
+        params = (int(id_cliente),)
+
+    consulta_sql += " ORDER BY pe.id_pedido DESC"
     pedidos_agrupados = {}
 
     try:
-        cursor.execute(consulta_sql)
+        if params:
+            cursor.execute(consulta_sql, params)
+        else:
+            cursor.execute(consulta_sql)
         pedido = cursor.fetchall()
         for fila in pedido:
             id_actual = fila['id_pedido']
@@ -200,3 +210,65 @@ def obtener_pedidos_caja():
             pedidos_para_caja.append(pedido)
             
     return pedidos_para_caja
+
+
+def obtener_detalle_completo_pedido(id_pedido):
+    """
+    Busca un pedido por su ID junto con la lista de todos los productos asociados.
+    """
+    # Usamos tu función nativa para conectar a la base de datos
+    db = conectar_db()
+    if db is None:
+        return {"error": "No se pudo conectar a la base de datos"}
+    
+    try:
+        # Creamos el cursor con dictionary=True para que devuelva clave-valor
+        cursor = db.cursor(dictionary=True)
+
+        # 1. Traer los datos generales del pedido usando tus columnas reales
+        query_pedido = """
+            SELECT id_pedido, fecha_p, estado, total_p 
+            FROM pedidos 
+            WHERE id_pedido = %s
+        """
+        cursor.execute(query_pedido, (id_pedido,))
+        pedido_base = cursor.fetchone()
+
+        if not pedido_base:
+            cursor.close()
+            db.close()
+            return None
+
+        # 2. Traer los productos usando 'detalle_pedido' y 'cantidad_v' como lo tienes mapeado
+        query_productos = """
+            SELECT dp.cantidad_v AS cantidad, dp.precio_unitario, pr.nombre_pr AS nombre_pizza
+            FROM detalle_pedido dp
+            JOIN productos pr ON dp.id_producto = pr.id_producto
+            WHERE dp.id_pedido = %s
+        """
+        cursor.execute(query_productos, (id_pedido,))
+        productos_pedido = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        # Formatear la hora de forma segura
+        if pedido_base['fecha_p']:
+            hora_formateada = pedido_base['fecha_p'].strftime('%H:%M') if hasattr(pedido_base['fecha_p'], 'strftime') else str(pedido_base['fecha_p'])
+        else:
+            hora_formateada = "--:--"
+
+        # Estructuramos la respuesta final exacta que espera tu fetch en index.html
+        return {
+            "id_pedido": pedido_base['id_pedido'],
+            "fecha": hora_formateada,
+            "estado": pedido_base['estado'] or 'Pendiente',
+            "total": float(pedido_base['total_p'] or 0),
+            "productos": productos_pedido
+        }
+
+    except Exception as e:
+        print(f"❌ Error en src.pedidos.obtener_detalle_completo_pedido: {e}")
+        if db:
+            db.close()
+        return {"error": str(e)}

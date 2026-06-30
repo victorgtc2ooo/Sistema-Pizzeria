@@ -54,6 +54,16 @@
             border: 1px solid rgba(255, 255, 255, 0.22);
             box-shadow: 0 28px 80px rgba(0, 0, 0, 0.18);
         }
+
+        #detallePedidoModal.activo {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #detallePedidoModal.activo #detalleContenido {
+            transform: scale(1);
+        }
+
     </style>
 </head>
 <body class="bg-pizza-overlay text-amber-50/90 min-h-screen font-sans antialiased relative">
@@ -186,6 +196,35 @@
                     <div class="text-center py-6 text-stone-400 text-xs italic">
                         <i class="fa-solid fa-pizza-slice mb-2 text-lg block opacity-40 text-amber-400"></i>
                         No tienes pedidos activos en este momento.
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div id="detallePedidoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 invisible opacity-0 pointer-events-none transition-all duration-500 ease-out">
+                <div id="detalleOverlay" onclick="cerrarDetalleAnimado()" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+                
+                <div id="detalleContenido" class="relative bg-stone-900/95 border border-white/20 w-full max-w-md rounded-3xl p-6 text-white shadow-2xl transform scale-0 origin-bottom-right transition-all duration-500 ease-out backdrop-blur-md">
+                    
+                    <button onclick="cerrarDetalleAnimado()" class="absolute top-5 right-5 text-stone-400 hover:text-red-400 transition text-xl" style="outline: none;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    <div class="border-b border-white/10 pb-4 mb-4">
+                        <h3 class="text-2xl font-black text-amber-300 tracking-wide" id="det_titulo">Pedido #--</h3>
+                        <p class="text-xs text-stone-400 mt-1" id="det_fecha">Hora: --:--</p>
+                        <p class="text-xs font-bold mt-2 flex items-center gap-1.5">
+                            Estado actual: <span id="det_estado" class="px-2 py-0.5 rounded-lg text-[11px]">---</span>
+                        </p>
+                    </div>
+
+                    <div class="space-y-3 max-h-60 overflow-y-auto pr-1 scrollbar-none" id="det_productos_lista">
+                        </div>
+
+                    <div class="border-t border-white/10 pt-4 mt-4 flex justify-between items-center font-bold text-base">
+                        <span class="text-stone-300 font-medium">Total Pagado:</span>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-500 text-2xl font-black tracking-tight" id="det_total">$0.00</span>
                     </div>
                 </div>
             </div>
@@ -578,7 +617,9 @@
                     const fechaFormateada = pedido.fecha_p ? new Date(pedido.fecha_p).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Reciente';
 
                     contenedor.innerHTML += `
-                        <div class="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center justify-between transition-all hover:bg-white/10 fade-in">
+                        <div class="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center justify-between transition-all hover:bg-white/10 hover:border-amber-500/40 cursor-pointer fade-in" 
+                             data-id="${idMostrado}" 
+                             onclick="abrirDetallePedido('${idMostrado}')">
                             <div class="space-y-1">
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs font-bold text-amber-100">Pedido #${idMostrado}</span>
@@ -612,6 +653,72 @@
         
         // Temporizador unificado cada 5 segundos
         setInterval(actualizarEstadoPedidosCliente, 5000);
+
+
+    // =========================================================================
+        // 🟩 NUEVO: FUNCIONES PARA CONTROLAR EL DETALLE ANIMADO DEL PEDIDO
+        // =========================================================================
+        async function abrirDetallePedido(idPedido) {
+            const modal = document.getElementById("detallePedidoModal");
+            const listaProductos = document.getElementById("det_productos_lista");
+
+            if (!modal || !listaProductos) return;
+
+            try {
+                // 1. Consultamos el detalle del pedido a nuestro servidor Flask
+                const respuesta = await fetch(`http://127.0.0.1:5000/api/pedido/${idPedido}`);
+                const data = await respuesta.json();
+
+                if (!respuesta.ok) {
+                    mostrarNotificacion(data.mensaje || 'No se pudo cargar el detalle del pedido.', 'error');
+                    return;
+                }
+
+                // 2. Llenamos los campos del encabezado con los datos reales que vienen de Flask
+                document.getElementById("det_titulo").innerText = `Pedido #${data.id_pedido}`;
+                document.getElementById("det_fecha").innerText = `Hora: ${data.fecha}`;
+                document.getElementById("det_total").innerText = `$${parseFloat(data.total).toFixed(2)}`;
+                
+                // Configurar el texto y estilo del estado dentro del detalle
+                const estadoTxt = document.getElementById("det_estado");
+                estadoTxt.innerText = data.estado;
+                
+                // Le damos un color elegante al estado basándonos en lo que responda el servidor
+                estadoTxt.className = "px-2 py-0.5 rounded-lg text-[11px] font-bold uppercase ";
+                if (data.estado.includes("Pendiente")) estadoTxt.className += "bg-amber-500/20 text-amber-300 border border-amber-500/30";
+                else if (data.estado.includes("Camino") || data.estado.includes("Enviado")) estadoTxt.className += "bg-blue-500/20 text-blue-300 border border-blue-500/30";
+                else estadoTxt.className += "bg-orange-500/20 text-orange-300 border border-orange-500/30";
+
+                // 3. Limpiamos la lista vieja e inyectamos los productos del pedido
+                listaProductos.innerHTML = "";
+                data.productos.forEach(prod => {
+                    listaProductos.innerHTML += `
+                        <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 fade-in">
+                            <div>
+                                <p class="font-bold text-xs text-stone-200 tracking-wide">${prod.nombre_pizza}</p>
+                                <p class="text-[10px] text-stone-400 mt-0.5">Cantidad: ${prod.cantidad} x $${parseFloat(prod.precio_unitario).toFixed(2)}</p>
+                            </div>
+                            <span class="font-bold text-xs text-amber-400">$${(prod.cantidad * prod.precio_unitario).toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+
+                // 4. Activamos las clases CSS para que se expanda mágicamente desde abajo a la derecha
+                modal.classList.add("activo");
+
+            } catch (error) {
+                console.error("Error al obtener el detalle del pedido:", error);
+                mostrarNotificacion("Error de comunicación con el servidor al cargar detalles.", 'error');
+            }
+        }
+
+        function cerrarDetalleAnimado() {
+            const modal = document.getElementById("detallePedidoModal");
+            if (modal) {
+                // Removemos la clase activo para que se encoja de vuelta hacia la esquina inferior derecha
+                modal.classList.remove("activo");
+            }
+        }
     </script>
 </body>
 </html>

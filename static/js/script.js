@@ -108,73 +108,122 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cerrarPanel) cerrarPanel.onclick = cerrarTodo;
     if (overlay) overlay.onclick = cerrarTodo;
 
-    //=====================================================
-    // LOGIN (FETCH)
+//=====================================================
+    // LOGIN (FETCH) - EVITA EL CIERRE Y VALIDA CON FLASK
     //=====================================================
     const formLogin = document.getElementById("formLogin");
 
     if (formLogin) {
         formLogin.addEventListener("submit", async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // 🚨 ¡ESTO EVITA QUE LA PÁGINA SE RECARGUE Y SE CIERRE!
 
-            const correo = document.getElementById('correo').value;
+            const correo = document.getElementById('correo').value.trim();
             const password = document.getElementById('password').value;
+
+            // Cambiar el estado del botón a cargando si lo deseas
+            const botonLogin = formLogin.querySelector('button[type="submit"]');
+            if (botonLogin) {
+                botonLogin.disabled = true;
+                botonLogin.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Verificando...';
+            }
 
             try {
                 const respuesta = await fetch('/login', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ correo, password })
                 });
 
                 const data = await respuesta.json();
 
                 if (respuesta.ok) {
-                    mostrarNotificacion(`¡Bienvenido de vuelta, ${data.perfil.Nombre}!`, 'exito');
-
-                    localStorage.setItem('nombre_usuario', data.perfil.Nombre);
-                    localStorage.setItem('correo_usuario', data.perfil.Correo);
-                    localStorage.setItem('rol_usuario', data.perfil.Rol);
-                    localStorage.setItem('tipo_usuario', data.perfil.Tipo);
-
+                    mostrarNotificacion(`¡Bienvenido, ${data.perfil.Nombre}!`, 'exito');
+                    
+                    // Almacenamos datos de sesión según el tipo de perfil
+                    if (data.perfil.Tipo === 'cliente') {
+                        // El frontend `index.html` espera estas llaves en localStorage
+                        localStorage.setItem('id_cliente', data.perfil.id_cliente);
+                        localStorage.setItem('nombre_cliente', data.perfil.Nombre);
+                        localStorage.setItem('direccion_cliente', data.perfil.Direccion || '');
+                    } else {
+                        // Para empleados/usuarios internos
+                        localStorage.setItem('nombre_usuario', data.perfil.Nombre);
+                        localStorage.setItem('rol_usuario', data.perfil.Rol);
+                    }
+                    
+                    // Redirección suave según el tipo de usuario tras leer la notificación
                     setTimeout(() => {
                         if (data.perfil.Tipo === 'cliente') {
-                            localStorage.setItem('id_cliente', data.perfil.id_cliente);
-                            localStorage.setItem('direccion_cliente', data.perfil.Direccion);
                             window.location.href = '/index';
-                            return;
+                        } else {
+                            window.location.href = '/' + data.perfil.Rol.toLowerCase();
                         }
-
-                        const rol = data.perfil.Rol.toLowerCase();
-                        if (rol === 'admin' || rol === 'administrador') window.location.href = '/admin';
-                        else if (rol === 'cocina' || rol === 'cocinero') window.location.href = '/cocina';
-                        else if (rol === 'mesero') window.location.href = '/mesero';
-                        else if (rol === 'cajero') window.location.href = '/cajero';
-                        else window.location.href = '/index';
-                    }, 1500);
-
+                    }, 1200);
                 } else {
-                    mostrarNotificacion(data.mensaje || 'Error en las credenciales', 'error');
+                    // Si falla la contraseña, muestra error pero el panel se mantiene abierto
+                    mostrarNotificacion(data.mensaje || 'Credenciales incorrectas.', 'error');
                 }
-
             } catch (error) {
-                console.error(error);
-                mostrarNotificacion('No se pudo conectar con el servidor de Flask.', 'error');
+                console.error('Error:', error);
+                mostrarNotificacion('Error de comunicación con el servidor.', 'error');
+            } finally {
+                if (botonLogin) {
+                    botonLogin.disabled = false;
+                    botonLogin.innerHTML = 'Ingresar a la Pizzería';
+                }
             }
         });
     }
-
-    //=====================================================
-    // REGISTRO (FETCH) - INTEGRADO DENTRO DEL DOMCONTENTLOADED
-    //=====================================================
     const formRegistro = document.getElementById("formRegistro");
 
     if (formRegistro) {
         let registroEnviando = false;
 
         formRegistro.addEventListener("submit", async (e) => {
+
             e.preventDefault();
 
+            // 1. EXTRAER VALORES (Tal como los tienes)
+            const nombre = document.getElementById('reg_nombre').value.trim();
+            const apellido = document.getElementById('reg_apellido').value.trim();
+            const correo = document.getElementById('reg_correo').value.trim();
+            const password = document.getElementById('reg_password').value;
+            const telefono = document.getElementById('reg_telefono').value.trim();
+            const direccion = document.getElementById('reg_direccion').value.trim();
+
+            // =========================================================
+            // 🚨 NUEVO: FILTRO DE VALIDACIONES (Si falla, frena aquí sin romper nada)
+            // =========================================================
+            const regexLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+            const regexTelefono = /^\d{10}$/;
+            const regexPassword = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.])[A-Za-z\d@$!%*?&#.]{8,}$/;
+
+            if (!regexLetras.test(nombre) || nombre.length > 40) {
+                mostrarNotificacion('El nombre no debe contener números ni caracteres especiales (Máx. 40 caracteres).', 'error');
+                return; // Se detiene aquí, permitiendo al usuario corregir el input
+            }
+
+            if (!regexLetras.test(apellido) || apellido.length > 40) {
+                mostrarNotificacion('El apellido no debe contener números ni caracteres especiales (Máx. 40 caracteres).', 'error');
+                return;
+            }
+
+            if (!regexTelefono.test(telefono)) {
+                mostrarNotificacion('El teléfono debe tener exactamente 10 dígitos numéricos.', 'error');
+                return;
+            }
+
+            if (!regexPassword.test(password)) {
+                mostrarNotificacion('La contraseña debe tener mínimo 8 caracteres, incluir al menos una mayúscula, un número y un carácter especial (@$!%*?&#.).', 'error');
+                return;
+            }
+
+
+            // =========================================================
+            // 🚀 TU LÓGICA ORIGINAL ENTRA EN ACCIÓN (Solo si todo está correcto)
+            // =========================================================
             if (registroEnviando) return;
             registroEnviando = true;
 
@@ -183,13 +232,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 botonRegistro.disabled = true;
                 botonRegistro.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Registrando...';
             }
-
-            const nombre = document.getElementById('reg_nombre').value.trim();
-            const apellido = document.getElementById('reg_apellido').value.trim();
-            const correo = document.getElementById('reg_correo').value.trim();
-            const password = document.getElementById('reg_password').value;
-            const telefono = document.getElementById('reg_telefono').value.trim();
-            const direccion = document.getElementById('reg_direccion').value.trim();
 
             try {
                 const respuesta = await fetch('/api/registrar_cliente', {
@@ -209,13 +251,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         abrirLogin(); // Cambia al formulario de login con animación suave
                     }, 1200);
                 } else {
-                    // Muestra el mensaje exacto enviado desde Flask (ej. "El correo ya está registrado")
                     mostrarNotificacion(data.mensaje || data.error || 'Error al registrar el cliente', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 mostrarNotificacion('No se pudo conectar con el servidor.', 'error');
             } finally {
+                // Tu bloque finally original restablece todo al terminar el fetch
                 registroEnviando = false;
                 if (botonRegistro) {
                     botonRegistro.disabled = false;
