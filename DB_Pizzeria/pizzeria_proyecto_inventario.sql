@@ -30,7 +30,7 @@ CREATE TABLE `inventario` (
   `unidad_registrada` varchar(10) DEFAULT NULL,
   `activo` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id_inventario`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -39,7 +39,7 @@ CREATE TABLE `inventario` (
 
 LOCK TABLES `inventario` WRITE;
 /*!40000 ALTER TABLE `inventario` DISABLE KEYS */;
-INSERT INTO `inventario` VALUES (9,'Queso',4200.00,4000.00,'g',1),(10,'Arina',4700.00,1000.00,'G',1),(11,'Chedar',1500.00,1000.00,'g',1);
+INSERT INTO `inventario` VALUES (9,'Queso',4200.00,4000.00,'g',1),(10,'Arina',4700.00,1000.00,'G',1),(11,'Chedar',1500.00,1000.00,'g',1),(12,'Queso viejo',10000.00,5000.00,'g',1),(13,'Pata de Tomate',10000.00,5000.00,'ml',1),(14,'Patel por unidad',20.00,5.00,'Unidades',1),(15,'Piña',20.00,5.00,'Unidades',1),(16,'Papas crudass',10000.00,5000.00,'g',1);
 /*!40000 ALTER TABLE `inventario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -52,4 +52,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-01  4:33:49
+-- Dump completed on 2026-07-02  7:45:47

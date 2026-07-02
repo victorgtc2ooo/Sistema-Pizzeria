@@ -550,6 +550,15 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="flex justify-between items-center mt-4 bg-stone-900/40 p-3 rounded-xl border border-white/5">
+                    <button id="btnPrevUsuarios" onclick="cambiarPaginaUsuarios(-1)" class="px-3 py-1.5 bg-stone-800 text-stone-300 rounded-lg hover:bg-stone-700 disabled:opacity-40 text-xs font-bold transition">
+                        <i class="fa-solid fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <span id="infoPaginacionUsuarios" class="text-xs text-stone-400 font-medium">Página 1 de 1</span>
+                    <button id="btnNextUsuarios" onclick="cambiarPaginaUsuarios(1)" class="px-3 py-1.5 bg-stone-800 text-stone-300 rounded-lg hover:bg-stone-700 disabled:opacity-40 text-xs font-bold transition">
+                        Siguiente <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -699,9 +708,12 @@
             let editandoUsuarioId = null;
             let productosGlobales = [];
             let categoriasGlobales = [];
+            let usuariosGlobales = [];
             let paginaActualProductos = 1;
             let paginaActualCategorias = 1;
+            let paginaActualUsuarios = 1;
             const filasPorPaginaAdmin = 10;
+            const filasPorPaginaUsuarios = 10;
             
             let todasLasCompras = [];
             let paginaActualCompras = 1;
@@ -1520,30 +1532,36 @@
                 }
             }
 
-            async function cargarUsuarios() {
-                try {
-                    // CORREGIDO: Ruta en singular '/api/obtener_usuario' tal como la tenías originalmente
-                    const respuesta = await fetch(`/api/obtener_usuario?t=${new Date().getTime()}`);
-                    if (!respuesta.ok) throw new Error("No se pudieron cargar los usuarios");
+            function renderizarUsuariosPagina() {
+                const tbody = document.getElementById('tabla-usuarios-body');
+                const info = document.getElementById('infoPaginacionUsuarios');
+                const btnPrev = document.getElementById('btnPrevUsuarios');
+                const btnNext = document.getElementById('btnNextUsuarios');
 
-                    const usuarios = await respuesta.json();
-                    const tbody = document.getElementById('tabla-usuarios-body');
-                    if (!tbody) return;
-                    tbody.innerHTML = '';
+                if (!tbody) return;
+                tbody.innerHTML = '';
 
-                    if (usuarios.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-gray-400 italic">No hay personal registrado.</td></tr>`;
-                        return;
-                    }
+                if (usuariosGlobales.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-gray-400 italic">No hay personal registrado.</td></tr>`;
+                    if (info) info.innerText = 'Página 1 de 1';
+                    if (btnPrev) btnPrev.disabled = true;
+                    if (btnNext) btnNext.disabled = true;
+                    return;
+                }
 
-                    usuarios.forEach(user => {
-                        // Mantenemos tus colores personalizados según el rol
-                        let badgeColor = "bg-slate-950 text-slate-400 border border-slate-800";
-                        if (user.rol === 'admin') badgeColor = "bg-amber-500/10 text-amber-400 border border-amber-500/20";
-                        if (user.rol === 'cocina') badgeColor = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-                        if (user.rol === 'mesero') badgeColor = "bg-sky-500/10 text-sky-400 border border-sky-500/20";
+                const totalPaginas = Math.max(1, Math.ceil(usuariosGlobales.length / filasPorPaginaUsuarios));
+                paginaActualUsuarios = Math.min(Math.max(1, paginaActualUsuarios), totalPaginas);
 
-                        tbody.innerHTML += `
+                const inicio = (paginaActualUsuarios - 1) * filasPorPaginaUsuarios;
+                const usuariosPagina = usuariosGlobales.slice(inicio, inicio + filasPorPaginaUsuarios);
+
+                usuariosPagina.forEach(user => {
+                    let badgeColor = "bg-slate-950 text-slate-400 border border-slate-800";
+                    if (user.rol === 'admin') badgeColor = "bg-amber-500/10 text-amber-400 border border-amber-500/20";
+                    if (user.rol === 'cocina') badgeColor = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                    if (user.rol === 'mesero') badgeColor = "bg-sky-500/10 text-sky-400 border border-sky-500/20";
+
+                    tbody.innerHTML += `
                         <tr class="border-b border-slate-800/40 hover:bg-slate-900/30 transition-all">
                             <td class="py-4 px-6 font-medium text-slate-200">
                                 ${user.nombre_u} ${user.apellido_u}
@@ -1564,13 +1582,37 @@
                             </td>
                         </tr>
                     `;
-                    });
+                });
+
+                if (info) info.innerText = `Página ${paginaActualUsuarios} de ${totalPaginas}`;
+                if (btnPrev) btnPrev.disabled = paginaActualUsuarios === 1;
+                if (btnNext) btnNext.disabled = paginaActualUsuarios >= totalPaginas;
+            }
+
+            function cambiarPaginaUsuarios(direccion) {
+                const totalPaginas = Math.max(1, Math.ceil(usuariosGlobales.length / filasPorPaginaUsuarios));
+                paginaActualUsuarios = Math.min(Math.max(1, paginaActualUsuarios + direccion), totalPaginas);
+                renderizarUsuariosPagina();
+            }
+
+            async function cargarUsuarios() {
+                try {
+                    const respuesta = await fetch(`/api/obtener_usuario?t=${new Date().getTime()}`);
+                    if (!respuesta.ok) throw new Error("No se pudieron cargar los usuarios");
+
+                    const usuarios = await respuesta.json();
+                    usuariosGlobales = [...usuarios].sort((a, b) => (Number(b.id_usuario) || 0) - (Number(a.id_usuario) || 0));
+                    paginaActualUsuarios = 1;
+                    renderizarUsuariosPagina();
                 } catch (error) {
                     console.error("Error al cargar usuarios:", error);
                     const tbody = document.getElementById('tabla-usuarios-body');
                     if (tbody) {
                         tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-medium"><i class="fa-solid fa-circle-exclamation mr-2"></i> Error al cargar el listado.</td></tr>`;
                     }
+                    usuariosGlobales = [];
+                    paginaActualUsuarios = 1;
+                    renderizarUsuariosPagina();
                 }
             }
 

@@ -32,7 +32,7 @@ CREATE TABLE `recetas` (
   KEY `id_inventario` (`id_inventario`),
   CONSTRAINT `recetas_ibfk_1` FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`),
   CONSTRAINT `recetas_ibfk_2` FOREIGN KEY (`id_inventario`) REFERENCES `inventario` (`id_inventario`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,7 +41,7 @@ CREATE TABLE `recetas` (
 
 LOCK TABLES `recetas` WRITE;
 /*!40000 ALTER TABLE `recetas` DISABLE KEYS */;
-INSERT INTO `recetas` VALUES (9,1,10,400.00);
+INSERT INTO `recetas` VALUES (9,1,10,400.00),(15,1,9,300.00),(16,1,12,300.00),(17,1,13,300.00),(18,10,16,400.00),(19,8,16,600.00),(21,9,16,900.00),(22,11,10,400.00),(23,11,11,500.00),(24,11,13,300.00),(25,14,14,1.00),(26,15,14,1.00);
 /*!40000 ALTER TABLE `recetas` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -54,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-01  4:33:49
+-- Dump completed on 2026-07-02  7:45:47

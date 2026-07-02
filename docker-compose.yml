@@ -32,8 +32,8 @@ services:
       - db
     volumes:
       # 🟢 Esto soluciona los permisos de subida en Linux automáticamente y no rompe Windows
-      - uploads_productos:/app/static/uploads/productos
-      - uploads_categorias:/app/static/uploads/categorias
+      - ./static/uploads/productos:/app/static/uploads/productos
+      - ./static/uploads/categorias:/app/static/uploads/categorias
 
 volumes:
   db_data:

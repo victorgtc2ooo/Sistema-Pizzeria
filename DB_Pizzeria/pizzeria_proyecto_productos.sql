@@ -33,7 +33,7 @@ CREATE TABLE `productos` (
   PRIMARY KEY (`id_producto`),
   KEY `id_categoria` (`id_categoria`),
   CONSTRAINT `id_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id_categoria`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -42,7 +42,7 @@ CREATE TABLE `productos` (
 
 LOCK TABLES `productos` WRITE;
 /*!40000 ALTER TABLE `productos` DISABLE KEYS */;
-INSERT INTO `productos` VALUES (1,'Pizza Cinco Quesos',15.50,'pizza-4-quesos.jpg',1,1,NULL),(5,'Coca Cola',1.00,'images_1.jpg',4,1,NULL),(7,'Pizza Casa',20.50,'pizzas.jpg',1,1,NULL),(8,'Papas Medianas',2.99,'Captura_de_pantalla_2026-06-15_112355.png',5,1,NULL),(9,'Papas Grandes',3.00,'Captura_de_pantalla_2025-12-28_234255.png',5,1,NULL),(10,'webo',3.50,'Captura_de_pantalla_2026-01-26_121423.png',1,0,NULL),(11,'Pizza De Chedar',10.00,'descarga.jpg',1,1,'Piazza de queso puro chedar');
+INSERT INTO `productos` VALUES (1,'Pizza Cinco Quesos',15.50,'pizza-4-quesos.jpg',1,1,NULL),(5,'Coca Cola',1.00,'images_1.jpg',4,1,NULL),(7,'Pizza Casa',20.50,'pizzas.jpg',1,1,NULL),(8,'Papas Medianas',2.99,'PAPAS-CROCANTES.jpg',5,1,''),(9,'Papas Grandes',3.00,'images_4.jpg',5,1,''),(10,'Papas Pequeñas',1.50,'images_2.jpg',5,1,''),(11,'Pizza De Chedar',10.00,'descarga.jpg',1,1,'Piazza de queso puro chedar'),(12,'Pepsi ',1.50,'images_6.jpg',4,1,''),(13,'Fanta',1.00,'images_7.jpg',4,1,''),(14,'Pastel de Chocolate',1.50,'images_8.jpg',7,1,''),(15,'Pastel de mango ',1.50,'images_9.jpg',7,1,''),(16,'Flan',1.00,'images_10.jpg',7,1,'');
 /*!40000 ALTER TABLE `productos` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -55,4 +55,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-01  4:33:48
+-- Dump completed on 2026-07-02  7:45:47

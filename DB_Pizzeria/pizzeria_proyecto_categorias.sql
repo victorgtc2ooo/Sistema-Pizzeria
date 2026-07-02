@@ -37,7 +37,7 @@ CREATE TABLE `categorias` (
 
 LOCK TABLES `categorias` WRITE;
 /*!40000 ALTER TABLE `categorias` DISABLE KEYS */;
-INSERT INTO `categorias` VALUES (1,'pizzas 3','8102ffb3-31f6-41ae-981f-b3c1aab3d478.jpg',1),(4,'Bebidas','bebidas.jpg',1),(5,'Papas Fritas ','PAPAS-CROCANTES.jpg',1),(7,'Postres 2','Captura_de_pantalla_2025-12-28_221222.png',0);
+INSERT INTO `categorias` VALUES (1,'Pizza','pizzas.jpg',1),(4,'Bebidas','bebidas.jpg',1),(5,'Papas Fritas ','PAPAS-CROCANTES.jpg',1),(7,'Postres ','images_3.jpg',1);
 /*!40000 ALTER TABLE `categorias` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -50,4 +50,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-01  4:33:49
+-- Dump completed on 2026-07-02  7:45:47

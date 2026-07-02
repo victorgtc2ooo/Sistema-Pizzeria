@@ -326,11 +326,11 @@
 
         async function cargarDatosIniciales() {
             try {
-                const resCat = await fetch('http://192.168.101.9:5000/api/obtener_categorias_publicas');
+                const resCat = await fetch('http://127.0.0.1:5000/api/obtener_categorias_publicas');
                 if (!resCat.ok) throw new Error('Error al obtener categorías');
                 listaCategorias = await resCat.json();
 
-                const resProd = await fetch('http://192.168.101.9:5000/api/obtener_productos_publicos');
+                const resProd = await fetch('http://127.0.0.1:5000/api/obtener_productos_publicos');
                 if (!resProd.ok) throw new Error('Error al obtener productos');
                 listaProductos = await resProd.json();
 
