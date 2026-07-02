@@ -142,6 +142,10 @@
                 class="px-5 py-2.5 rounded-full font-bold text-xs bg-[#4a3f3c]/60 text-gray-300 hover:bg-[#4a3f3c] transition-all flex items-center gap-2 whitespace-nowrap">
                 <i class="fa-solid fa-chart-line text-sm"></i> Historial de Ventas
             </button>
+            <a href="/admin/clientes"
+                class="px-5 py-2.5 rounded-full font-bold text-xs bg-[#4a3f3c]/60 text-gray-300 hover:bg-[#4a3f3c] transition-all flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-users"></i> Control de Clientes
+            </a>
         </div>
 
         <div id="seccion-productos" class="grid grid-cols-1 lg:grid-cols-3 gap-8 ">
@@ -166,6 +170,13 @@
                             ($)</label>
                         <input type="number" id="prod-precio" step="0.01" required
                             class="w-full glass-input-bg rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#f4ad42] transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#f4ad42] uppercase tracking-wider mb-2">Descripción</label>
+                        <textarea id="prod-descripcion" rows="3" maxlength="220"
+                            placeholder="Describe el producto para mostrarlo en el menú"
+                            class="w-full glass-input-bg rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#f4ad42] transition-all"></textarea>
                     </div>
 
                     <div>
@@ -204,8 +215,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr
-                                class="border-b border-white/5 glass-input-bg text-[11px] font-bold text-gray-300 uppercase tracking-wider">
+                            <tr class="border-b border-white/5 glass-input-bg text-[11px] font-bold text-gray-300 uppercase tracking-wider">
                                 <th class="py-3 px-6">Imagen</th>
                                 <th class="py-3 px-6">Nombre</th>
                                 <th class="py-3 px-6">Precio</th>
@@ -216,6 +226,14 @@
                         <tbody id="tabla-productos" class="divide-y divide-white/5 text-xs">
                         </tbody>
                     </table>
+                </div> <div class="flex justify-between items-center mt-4 bg-stone-900/40 p-3 rounded-b-3xl border-t border-white/5">
+                    <button id="btnPrevProductos" onclick="cambiarPaginaProductos(-1)" class="px-3 py-1.5 bg-stone-800 text-stone-300 rounded-lg hover:bg-stone-700 disabled:opacity-40 text-xs font-bold transition">
+                        <i class="fa-solid fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <span id="infoPaginacionProductos" class="text-xs text-stone-400 font-medium">Página 1 de 1</span>
+                    <button id="btnNextProductos" onclick="cambiarPaginaProductos(1)" class="px-3 py-1.5 bg-stone-800 text-stone-300 rounded-lg hover:bg-stone-700 disabled:opacity-40 text-xs font-bold transition">
+                        Siguiente <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -276,6 +294,15 @@
                         <tbody id="tabla-categorias" class="divide-y divide-white/5 text-xs">
                         </tbody>
                     </table>
+                </div>
+                <div class="flex justify-between items-center mt-4 bg-stone-900/40 p-3 rounded-b-3xl border-t border-white/5">
+                    <button id="btnPrevCategorias" onclick="cambiarPaginaCategorias(-1)" class="px-3 py-1.5 bg-stone-800 text-stone-300 rounded-lg hover:bg-stone-700 disabled:opacity-40 text-xs font-bold transition">
+                        <i class="fa-solid fa-chevron-left mr-1"></i> Anterior
+                    </button>
+                    <span id="infoPaginacionCategorias" class="text-xs text-stone-400 font-medium">Página 1 de 1</span>
+                    <button id="btnNextCategorias" onclick="cambiarPaginaCategorias(1)" class="px-3 py-1.5 bg-stone-800 text-stone-300 rounded-lg hover:bg-stone-700 disabled:opacity-40 text-xs font-bold transition">
+                        Siguiente <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -578,6 +605,15 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="flex justify-between items-center mt-4 bg-stone-900/40 p-3 rounded-xl border border-white/5">
+                        <button id="btnPrevCompras" onclick="cambiarPaginaCompras(-1)" class="px-3 py-1.5 bg-stone-800 text-stone-300 rounded-lg hover:bg-stone-700 disabled:opacity-40 text-xs font-bold transition">
+                            <i class="fa-solid fa-chevron-left mr-1"></i> Anterior
+                        </button>
+                        <span id="infoPaginacionCompras" class="text-xs text-stone-400 font-medium">Página 1 de 1</span>
+                        <button id="btnNextCompras" onclick="cambiarPaginaCompras(1)" class="px-3 py-1.5 bg-stone-800 text-stone-300 rounded-lg hover:bg-stone-700 disabled:opacity-40 text-xs font-bold transition">
+                            Siguiente <i class="fa-solid fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -661,13 +697,22 @@
             let listaInsumosGlobal = [];
             let editandoInsumoId = null;
             let editandoUsuarioId = null;
-
+            let productosGlobales = [];
+            let categoriasGlobales = [];
+            let paginaActualProductos = 1;
+            let paginaActualCategorias = 1;
+            const filasPorPaginaAdmin = 10;
+            
+            let todasLasCompras = [];
+            let paginaActualCompras = 1;
+            const filasPorPaginaCompras = 10;
 
             document.addEventListener("DOMContentLoaded", () => {
                 cargarCategorias();
                 cargarProductos();
                 cargarInventario();
                 cargarUsuarios();
+                cargarHistorialVentas();
             });
 
             // CONTROL DE PESTAÑAS (TABS)
@@ -742,11 +787,11 @@
                     if (secVentas) secVentas.classList.remove('hidden');
                     if (tabVentas) tabVentas.className = claseTabActiva;
 
-                    // ESTA LÍNEA ES LA QUE HACE QUE APAREZCAN LOS DATOS
-                    if (typeof cargarVentas === "function") {
-                        cargarVentas();
+                    // Carga el historial de ventas usando el mismo controlador que inicializa la paginación y filtros
+                    if (typeof cargarHistorialVentas === "function") {
+                        cargarHistorialVentas();
                     } else {
-                        console.error("La función cargarVentas no está definida");
+                        console.error("La función cargarHistorialVentas no está definida");
                     }
                 }
             }
@@ -759,30 +804,48 @@
                     const respuesta = await fetch('/api/obtener_categorias');
                     const categorias = await respuesta.json();
                     listaCategoriasGlobal = categorias;
+                    categoriasGlobales = categorias
+                        .slice()
+                        .sort((a, b) => (Number(b.id_categoria) || 0) - (Number(a.id_categoria) || 0));
 
-                    const tbody = document.getElementById('tabla-categorias');
-                    tbody.innerHTML = '';
+                    const totalPaginas = Math.ceil(categoriasGlobales.length / filasPorPaginaAdmin) || 1;
+                    paginaActualCategorias = Math.min(paginaActualCategorias, totalPaginas);
+                    renderizarCategoriasPagina();
 
+                    const selectProdCat = document.getElementById('prod-categoria');
+                    selectProdCat.innerHTML = '<option value="" disabled selected>Selecciona una categoría</option>';
                     categorias.forEach(cat => {
-                        // 1. Validamos el estado de la categoría (por defecto activa)
-                        const estaActiva = cat.activo_c !== 0;
+                        selectProdCat.innerHTML += `<option value="${cat.id_categoria}">${cat.nombre_c}</option>`;
+                    });
+                } catch (error) {
+                    console.error("Error al cargar categorías:", error);
+                }
+            }
 
-                        // 2. Creamos el Badge dinámico para el estado
-                        const badgeEstado = estaActiva
-                            ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Ok</span>`
-                            : `<span class="bg-slate-800 text-slate-500 border border-slate-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Inactivo</span>`;
+            function renderizarCategoriasPagina() {
+                const tbody = document.getElementById('tabla-categorias');
+                if (!tbody) return;
+                tbody.innerHTML = '';
 
-                        // 3. Cambiamos el botón de la papelera por el ojo dinámico (sin alterar tus estilos)
-                        const botonAccion = estaActiva
-                            ? `<button onclick="alternarEstadoCategoria(${cat.id_categoria}, 0)" class="text-xs bg-slate-800/40 hover:bg-red-900/40 text-slate-400 hover:text-red-400 font-bold py-2 px-3 rounded-lg transition-all border border-slate-800" title="Deshabilitar">
+                const inicio = (paginaActualCategorias - 1) * filasPorPaginaAdmin;
+                const fin = inicio + filasPorPaginaAdmin;
+                const categoriasPagina = categoriasGlobales.slice(inicio, fin);
+
+                categoriasPagina.forEach(cat => {
+                    const estaActiva = cat.activo_c !== 0;
+                    const badgeEstado = estaActiva
+                        ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Ok</span>`
+                        : `<span class="bg-slate-800 text-slate-500 border border-slate-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Inactivo</span>`;
+
+                    const botonAccion = estaActiva
+                        ? `<button onclick="alternarEstadoCategoria(${cat.id_categoria}, 0)" class="text-xs bg-slate-800/40 hover:bg-red-900/40 text-slate-400 hover:text-red-400 font-bold py-2 px-3 rounded-lg transition-all border border-slate-800" title="Deshabilitar">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>`
-                            : `<button onclick="alternarEstadoCategoria(${cat.id_categoria}, 1)" class="text-xs bg-slate-800/40 hover:bg-emerald-900/40 text-slate-500 hover:text-emerald-400 font-bold py-2 px-3 rounded-lg transition-all border border-slate-800" title="Habilitar">
+                        : `<button onclick="alternarEstadoCategoria(${cat.id_categoria}, 1)" class="text-xs bg-slate-800/40 hover:bg-emerald-900/40 text-slate-500 hover:text-emerald-400 font-bold py-2 px-3 rounded-lg transition-all border border-slate-800" title="Habilitar">
                             <i class="fa-solid fa-eye"></i>
                         </button>`;
 
-                        // 4. Renderizamos manteniendo la IMAGEN intacta
-                        tbody.innerHTML += `
+                    tbody.innerHTML += `
                         <tr class="border-b border-slate-800/40 hover:bg-slate-900/30 transition-all">
                             <td class="py-4 px-6">
                                 <img src="/static/uploads/categorias/${cat.imagen_c}" alt="${cat.nombre_c}" class="w-12 h-12 object-cover rounded-xl border border-slate-800">
@@ -801,16 +864,28 @@
                             </td>
                         </tr>
                     `;
-                    });
+                });
 
-                    const selectProdCat = document.getElementById('prod-categoria');
-                    selectProdCat.innerHTML = '<option value="" disabled selected>Selecciona una categoría</option>';
-                    categorias.forEach(cat => {
-                        selectProdCat.innerHTML += `<option value="${cat.id_categoria}">${cat.nombre_c}</option>`;
-                    });
-                } catch (error) {
-                    console.error("Error al cargar categorías:", error);
-                }
+                actualizarControlesPaginacionCategorias();
+            }
+
+            function actualizarControlesPaginacionCategorias() {
+                const totalPaginas = Math.ceil(categoriasGlobales.length / filasPorPaginaAdmin) || 1;
+                const info = document.getElementById('infoPaginacionCategorias');
+                const btnPrev = document.getElementById('btnPrevCategorias');
+                const btnNext = document.getElementById('btnNextCategorias');
+
+                if (info) info.innerText = `Página ${paginaActualCategorias} de ${totalPaginas}`;
+                if (btnPrev) btnPrev.disabled = paginaActualCategorias === 1;
+                if (btnNext) btnNext.disabled = paginaActualCategorias >= totalPaginas;
+            }
+
+            function cambiarPaginaCategorias(direccion) {
+                const totalPaginas = Math.ceil(categoriasGlobales.length / filasPorPaginaAdmin) || 1;
+                paginaActualCategorias += direccion;
+                if (paginaActualCategorias < 1) paginaActualCategorias = 1;
+                if (paginaActualCategorias > totalPaginas) paginaActualCategorias = totalPaginas;
+                renderizarCategoriasPagina();
             }
 
             async function guardarCategoria(event) {
@@ -834,6 +909,7 @@
                     if (respuesta.ok) {
                         mostrarNotificacion(resultado.mensaje, 'exito');
                         limpiarFormCategoria();
+                        paginaActualCategorias = 1;
                         cargarCategorias();
                     } else {
                         mostrarNotificacion("Error: " + (resultado.mensaje || resultado.error), 'error');
@@ -883,35 +959,56 @@
                 try {
                     const respuesta = await fetch('/api/obtener_productos');
                     const productos = await respuesta.json();
-                    const tbody = document.getElementById('tabla-productos');
-                    tbody.innerHTML = '';
+                    productosGlobales = productos
+                        .slice()
+                        .sort((a, b) => (Number(b.id_producto) || 0) - (Number(a.id_producto) || 0));
 
-                    productos.forEach(prod => {
-                        const estaActivo = prod.activo_p !== 0;
-                        const badgeEstado = estaActivo
-                            ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Ok</span>`
-                            : `<span class="bg-slate-800 text-slate-500 border border-slate-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Inactivo</span>`;
-                        const botonAccion = estaActivo
-                            ? `<button onclick="alternarEstadoProducto(${prod.id_producto}, 0)" class="text-slate-400 hover:text-red-400 p-1 transition-colors" title="Deshabilitar">
+                    const totalPaginas = Math.ceil(productosGlobales.length / filasPorPaginaAdmin) || 1;
+                    paginaActualProductos = Math.min(paginaActualProductos, totalPaginas);
+                    renderizarProductosPagina();
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            function renderizarProductosPagina() {
+                const tbody = document.getElementById('tabla-productos');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                const inicio = (paginaActualProductos - 1) * filasPorPaginaAdmin;
+                const fin = inicio + filasPorPaginaAdmin;
+                const productosPagina = productosGlobales.slice(inicio, fin);
+
+                productosPagina.forEach(prod => {
+                    const estaActivo = prod.activo_p !== 0;
+                    const badgeEstado = estaActivo
+                        ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Ok</span>`
+                        : `<span class="bg-slate-800 text-slate-500 border border-slate-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Inactivo</span>`;
+                    const botonAccion = estaActivo
+                        ? `<button onclick="alternarEstadoProducto(${prod.id_producto}, 0)" class="text-slate-400 hover:text-red-400 p-1 transition-colors" title="Deshabilitar">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>`
-                            : `<button onclick="alternarEstadoProducto(${prod.id_producto}, 1)" class="text-slate-500 hover:text-emerald-400 p-1 transition-colors" title="Habilitar">
+                        : `<button onclick="alternarEstadoProducto(${prod.id_producto}, 1)" class="text-slate-500 hover:text-emerald-400 p-1 transition-colors" title="Habilitar">
                             <i class="fa-solid fa-eye"></i>
                         </button>`;
 
-                        tbody.innerHTML += `
+                    tbody.innerHTML += `
                         <tr class="border-b border-slate-800/40 hover:bg-slate-900/30 transition-all">
                             <td class="py-4 px-6">
                                 <img src="/static/uploads/productos/${prod.imagen_pr}" alt="${prod.nombre_pr}" class="w-12 h-12 object-cover rounded-xl border border-slate-800">
                             </td>
-                            <td class="py-4 px-6 font-medium text-slate-200">${prod.nombre_pr}</td>
+                            <td class="py-4 px-6">
+                                <div class="font-medium text-slate-200">${prod.nombre_pr}</div>
+                                <div class="text-[11px] text-slate-400 mt-1">${prod.descripcion_pr || 'Sin descripción'}</div>
+                            </td>
                             <td class="py-4 px-6 font-semibold text-amber-400">$${parseFloat(prod.precio_pr).toFixed(2)}</td>
                             <td class="py-4 px-6 text-center">
                                 ${badgeEstado}
                             </td>
                             <td class="py-4 px-6 text-center">
                                 <div class="flex justify-center items-center gap-3">
-                                    <button onclick="prepararEditarProducto(${prod.id_producto}, '${prod.nombre_pr}', ${prod.precio_pr}, ${prod.id_categoria})" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-2 px-3 rounded-lg transition-all">
+                                    <button onclick="prepararEditarProducto(${prod.id_producto}, '${prod.nombre_pr}', ${prod.precio_pr}, ${prod.id_categoria}, '${(prod.descripcion_pr || '').replace(/'/g, "\\'")}' )" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-2 px-3 rounded-lg transition-all">
                                         <i class="fa-solid fa-pen mr-1"></i> Editar
                                     </button>
                                     ${botonAccion}
@@ -919,10 +1016,28 @@
                             </td>
                         </tr>
                     `;
-                    });
-                } catch (error) {
-                    console.error(error);
-                }
+                });
+
+                actualizarControlesPaginacionProductos();
+            }
+
+            function actualizarControlesPaginacionProductos() {
+                const totalPaginas = Math.ceil(productosGlobales.length / filasPorPaginaAdmin) || 1;
+                const info = document.getElementById('infoPaginacionProductos');
+                const btnPrev = document.getElementById('btnPrevProductos');
+                const btnNext = document.getElementById('btnNextProductos');
+
+                if (info) info.innerText = `Página ${paginaActualProductos} de ${totalPaginas}`;
+                if (btnPrev) btnPrev.disabled = paginaActualProductos === 1;
+                if (btnNext) btnNext.disabled = paginaActualProductos >= totalPaginas;
+            }
+
+            function cambiarPaginaProductos(direccion) {
+                const totalPaginas = Math.ceil(productosGlobales.length / filasPorPaginaAdmin) || 1;
+                paginaActualProductos += direccion;
+                if (paginaActualProductos < 1) paginaActualProductos = 1;
+                if (paginaActualProductos > totalPaginas) paginaActualProductos = totalPaginas;
+                renderizarProductosPagina();
             }
 
             async function guardarProducto(event) {
@@ -930,12 +1045,14 @@
                 const idProd = document.getElementById('prod-id').value;
                 const nombre = document.getElementById('prod-nombre').value;
                 const precio = document.getElementById('prod-precio').value;
+                const descripcion = document.getElementById('prod-descripcion').value;
                 const idCategoria = document.getElementById('prod-categoria').value;
                 const archivoInput = document.getElementById('prod-imagen');
 
                 const formData = new FormData();
                 formData.append('nombre', nombre);
                 formData.append('precio', precio);
+                formData.append('descripcion', descripcion);
                 formData.append('id_categoria', idCategoria);
                 if (archivoInput.files[0]) {
                     formData.append('imagen_route', archivoInput.files[0]);
@@ -950,6 +1067,7 @@
                     if (respuesta.ok) {
                         mostrarNotificacion(resultado.mensaje, 'exito');
                         limpiarFormProducto();
+                        paginaActualProductos = 1;
                         cargarProductos();
                     } else {
                         mostrarNotificacion("Error: " + (resultado.mensaje || resultado.error), 'error');
@@ -960,10 +1078,11 @@
                 }
             }
 
-            function prepararEditarProducto(id, nombre, precio, idCategoria) {
+            function prepararEditarProducto(id, nombre, precio, idCategoria, descripcion = '') {
                 document.getElementById('prod-id').value = id;
                 document.getElementById('prod-nombre').value = nombre;
                 document.getElementById('prod-precio').value = precio;
+                document.getElementById('prod-descripcion').value = descripcion;
                 document.getElementById('prod-categoria').value = idCategoria;
                 document.getElementById('titulo-form-producto').innerHTML = '<i class="fa-solid fa-pen text-amber-400"></i> Editar Producto';
                 document.getElementById('btn-cancelar-prod').classList.remove('hidden');
@@ -972,6 +1091,7 @@
             function limpiarFormProducto() {
                 document.getElementById('form-producto').reset();
                 document.getElementById('prod-id').value = '';
+                document.getElementById('prod-descripcion').value = '';
                 document.getElementById('titulo-form-producto').innerHTML = '<i class="fa-solid fa-plus-circle text-amber-400"></i> Agregar Nuevo Producto';
                 document.getElementById('btn-cancelar-prod').classList.add('hidden');
             }
@@ -1035,20 +1155,27 @@
 
             function agregarFilaIngrediente() {
                 const contenedor = document.getElementById('contenedor-filas-ingredientes');
+                if (!contenedor) return;
+
                 const nuevaFila = document.createElement('div');
-                nuevaFila.className = "fila-ingrediente flex gap-2 items-center";
+                nuevaFila.className = 'fila-ingrediente flex gap-2 items-center';
 
                 nuevaFila.innerHTML = `
-                <select required name="insumo_id" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-all"></select>
-                <div class="relative w-32">
-                    <input type="number" required name="insumo_cantidad" step="0.001" placeholder="Cant." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-all">
-                </div>
-                <button type="button" onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-500 p-2 text-sm transition-all">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            `;
+                    <select required name="insumo_id"
+                        class="flex-1 glass-input-bg rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#f4ad42] transition-all select-insumo-dinamico">
+                    </select>
+                    <div class="relative w-28">
+                        <input type="number" required name="insumo_cantidad" step="0.001" min="0" inputmode="decimal" placeholder="Cant."
+                            class="w-full glass-input-bg rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#f4ad42] transition-all">
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove()"
+                        class="text-red-400 hover:text-red-500 p-2 text-xs transition-all">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+
                 contenedor.appendChild(nuevaFila);
-                reconstruirOpcionesSelectInsumo(nuevaFila.querySelector('select'));
+                reconstruirOpcionesSelectInsumo(nuevaFila.querySelector('select[name="insumo_id"]'));
             }
 
             async function cargarRecetaEspecifica() {
@@ -1137,9 +1264,15 @@
                         const contenedor = document.getElementById('contenedor-filas-ingredientes');
                         contenedor.innerHTML = `
                         <div class="fila-ingrediente flex gap-2 items-center">
-                            <select required name="insumo_id" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-all select-insumo-dinamico"></select>
-                            <div class="relative w-32"><input type="number" required name="insumo_cantidad" step="0.001" placeholder="Cant." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-all"></div>
-                            <button type="button" class="text-slate-600 cursor-not-allowed p-2 text-sm" disabled><i class="fa-solid fa-trash"></i></button>
+                            <select required name="insumo_id"
+                                class="flex-1 glass-input-bg rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#f4ad42] transition-all select-insumo-dinamico"></select>
+                            <div class="relative w-28">
+                                <input type="number" required name="insumo_cantidad" step="0.001" min="0" inputmode="decimal" placeholder="Cant."
+                                    class="w-full glass-input-bg rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#f4ad42] transition-all">
+                            </div>
+                            <button type="button" class="text-gray-400 cursor-not-allowed p-2 text-xs" disabled>
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
                         </div>
                     `;
                         reconstruirOpcionesSelectInsumo(contenedor.querySelector('.select-insumo-dinamico'));
@@ -1249,6 +1382,11 @@
                 const stock = document.getElementById('inv-stock').value;
                 const stockMin = document.getElementById('inv-stock-min').value;
                 const unidad = document.getElementById('inv-unidad').value;
+
+                if (parseFloat(stock) < 0 || parseFloat(stockMin) < 0) {
+                    mostrarNotificacion("No se permiten valores negativos en el inventario.", "error");
+                    return;
+                }
 
                 // =================================================================
                 // INTEGRACIÓN MÍNIMA DE EDICIÓN: Solo si existe un ID cargado
@@ -1642,73 +1780,181 @@
             }
 
             let ventasLocales = []; // Cache en memoria para búsquedas instantáneas
+            let ventasFiltradas = []; // Lista actual segmentada para filtros y paginación
 
             // 1. Fetch de datos desde la API
             async function cargarHistorialVentas() {
-                try {
-                    const respuesta = await fetch('/api/admin/historial_ventas');
-                    if (!respuesta.ok) throw new Error("Error en la respuesta del servidor");
+        try {
+            const respuesta = await fetch('/api/admin/historial_ventas');
+            if (!respuesta.ok) throw new Error("Error en la respuesta del servidor");
 
-                    const ventas = await respuesta.json();
-                    ventasLocales = ventas;
-                    renderizarTablaVentas(ventas);
-                    if (typeof renderEstadisticasVentas === 'function') renderEstadisticasVentas(ventas);
-                } catch (error) {
-                    console.error("Error al cargar historial:", error);
-                    mostrarNotificacion("No se pudo obtener el historial de ventas.", "error");
-                }
+            const ventas = await respuesta.json();
+            ventasLocales = ventas;
+            ventasFiltradas = ventas;
+            todasLasCompras = ventas;
+            paginaActualCompras = 1;
+
+            if (typeof renderEstadisticasVentas === 'function') {
+                renderEstadisticasVentas(ventas);
             }
 
-            // 2. Pintar los datos en el HTML
-            function renderizarTablaVentas(listaVentas) {
-                const tbody = document.getElementById('tabla-ventas-body');
-                tbody.innerHTML = '';
+            renderizarTablaVentas();
 
-                if (listaVentas.length === 0) {
-                    tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center py-10 text-stone-500 italic">
-                    No se registran transacciones finalizadas en el historial.
+        } catch (error) {
+            console.error("Error al cargar historial:", error);
+            if (typeof mostrarNotificacion === 'function') {
+                mostrarNotificacion("No se pudo obtener el historial de ventas.", "error");
+            }
+        }
+    }
+
+    function renderizarTablaVentas(listaVentas = ventasFiltradas) {
+        const tbody = document.getElementById('tabla-ventas-body');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        const datos = listaVentas || [];
+        if (datos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-stone-500 text-xs">No hay registros de ventas.</td></tr>`;
+            actualizarControlesPaginacion(0);
+            return;
+        }
+
+        // Segmentamos el arreglo de 10 en 10 usando la página actual
+        const inicio = (paginaActualCompras - 1) * filasPorPaginaCompras;
+        const fin = inicio + filasPorPaginaCompras;
+        const comprasPaginadas = datos.slice(inicio, fin);
+
+        comprasPaginadas.forEach(compra => {
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-white/5 hover:bg-white/5 transition text-xs text-stone-300";
+
+            // Mapeamos de forma segura tus columnas exactas de la base de datos
+            const idPed = compra.id_pedido || '--';
+            const origen = compra.numero_mesa ? `Mesa ${compra.numero_mesa}` : (compra.origen_pedido || 'A domicilio 🛵');
+            const fecha = compra.fecha_p ? compra.fecha_p.substring(0, 16) : '--';
+            const total = parseFloat(compra.total_p || 0).toFixed(2);
+            const estado = compra.estado || 'Pendiente';
+
+            let claseEstado = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+            if (estado === 'Pagado' || estado === 'Entregado') claseEstado = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+            if (estado === 'Cancelado') claseEstado = "bg-red-500/10 text-red-400 border-red-500/20";
+
+            tr.innerHTML = `
+                <td class="py-3 px-4 font-bold text-white">#${idPed}</td>
+                <td class="py-3 px-4 text-stone-400">${origen}</td>
+                <td class="py-3 px-4 text-stone-400">${fecha}</td>
+                <td class="py-3 px-4 text-center">
+                    <button onclick="prepararYMostrarFactura(${idPed})" class="text-amber-400 hover:text-amber-300 text-[11px] bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 transition font-bold">
+                        <i class="fa-solid fa-receipt mr-1"></i> Ver factura
+                    </button>
                 </td>
-            </tr>`;
-                    return;
-                }
-
-                listaVentas.forEach(v => {
-                    // Formatear la lista de productos consumidos en un badge compacto
-                    const detalleProductos = v.productos.map(p =>
-                        `<span class="inline-block bg-stone-900/80 text-[11px] px-2 py-0.5 rounded-md border border-white/5 text-stone-400 mr-1 mb-1">
-                ${p.nombre_pr} <b class="text-amber-400">x${p.cantidad_v}</b>
-             </span>`
-                    ).join('');
-
-                    // Gestión visual del estado
-                    let badgeColor = "bg-stone-800 text-stone-400 border-stone-700";
-                    if (v.estado === 'Pagado' || v.estado === 'Entregado') {
-                        badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-                    } else if (v.estado === 'Cancelado') {
-                        badgeColor = "bg-red-500/10 text-red-400 border-red-500/20";
-                    }
-
-                    const fechaFormateada = v.fecha_p ? new Date(v.fecha_p).toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '---';
-                    const totalVenta = parseFloat(v.total_p || 0).toFixed(2);
-
-                    tbody.innerHTML += `
-            <tr class="hover:bg-white/[0.02] transition-colors">
-                <td class="py-4 px-6 font-mono font-bold text-amber-200">#${v.id_pedido}</td>
-                <td class="py-4 px-6 font-bold text-amber-50 capitalize">${v.origen_pedido}</td>
-                <td class="py-4 px-6 text-stone-400 font-medium">${fechaFormateada}</td>
-                <td class="py-4 px-6 max-w-xs">${detalleProductos}</td>
-                <td class="py-4 px-6 text-right font-black text-amber-400 text-sm">$${totalVenta}</td>
-                <td class="py-4 px-6 text-center">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${badgeColor}">
-                        ${v.estado}
+                <td class="py-3 px-4 font-black text-amber-400 text-right">$${total}</td>
+                <td class="py-3 px-4">
+                    <span class="px-2 py-0.5 rounded-lg border text-[10px] font-bold ${claseEstado}">
+                        ${estado}
                     </span>
                 </td>
-            </tr>
-        `;
-                });
+            `;
+            tbody.appendChild(tr);
+        });
+
+        actualizarControlesPaginacion(datos.length);
+    }
+
+    function actualizarControlesPaginacion(totalRegistros) {
+        const totalPaginas = Math.ceil(totalRegistros / filasPorPaginaCompras) || 1;
+        const btnPrev = document.getElementById('btnPrevCompras');
+        const btnNext = document.getElementById('btnNextCompras');
+        const txtInfo = document.getElementById('infoPaginacionCompras');
+
+        if (txtInfo) txtInfo.innerText = `Página ${paginaActualCompras} de ${totalPaginas}`;
+        if (btnPrev) btnPrev.disabled = (paginaActualCompras === 1);
+        if (btnNext) btnNext.disabled = (paginaActualCompras === totalPaginas);
+    }
+
+    function cambiarPaginaCompras(direccion) {
+        const totalPaginas = Math.ceil((ventasFiltradas.length || 0) / filasPorPaginaCompras) || 1;
+        paginaActualCompras += direccion;
+        if (paginaActualCompras < 1) paginaActualCompras = 1;
+        if (paginaActualCompras > totalPaginas) paginaActualCompras = totalPaginas;
+        renderizarTablaVentas();
+    }
+
+    async function prepararYMostrarFactura(idPedido) {
+        try {
+            const response = await fetch(`/api/pedido/${idPedido}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                mostrarNotificacion(data.mensaje || 'No se pudo obtener la factura.', 'error');
+                return;
             }
+
+            const total = parseFloat(data.total || 0);
+            const subtotal = total / 1.15;
+            const iva = total - subtotal;
+            const productos = Array.isArray(data.productos) ? data.productos : [];
+
+            const contenedor = document.getElementById('contenidoFacturaImprimible');
+            if (!contenedor) return;
+
+            contenedor.innerHTML = `
+                <div class="space-y-1 text-stone-200 font-mono">
+                    <div class="font-black uppercase tracking-wider text-sm text-center text-amber-400 font-sans">PIZZERÍA EL INGE</div>
+                    <div class="border-b border-dashed border-white/10 my-2"></div>
+                    <div class="grid grid-cols-2 gap-1 text-[11px] text-stone-400">
+                        <div><b>Factura:</b> #${data.id_pedido || '--'}</div>
+                        <div class="text-right"><b>Estado:</b> ${data.estado || '--'}</div>
+                        <div class="col-span-2"><b>Fecha:</b> ${data.fecha_p || '--'}</div>
+                    </div>
+                </div>
+                <div class="border-t border-dashed border-white/20 my-3"></div>
+                <div>
+                    <table class="w-full text-left text-[11px] font-mono text-stone-300">
+                        <thead class="text-stone-500 uppercase text-[10px] font-bold border-b border-white/10">
+                            <tr>
+                                <th class="pb-1">Cant</th>
+                                <th class="pb-1">Producto</th>
+                                <th class="pb-1 text-right">P.U.</th>
+                                <th class="pb-1 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            ${productos.map(p => `
+                                <tr>
+                                    <td class="py-2 font-bold text-amber-400">x${p.cantidad || 0}</td>
+                                    <td class="py-2 text-stone-200">${p.nombre_pr || p.nombre_pizza || 'Producto'}</td>
+                                    <td class="py-2 text-right">$${parseFloat(p.precio_unitario || 0).toFixed(2)}</td>
+                                    <td class="py-2 text-right text-white">$${((parseFloat(p.precio_unitario || 0) * parseFloat(p.cantidad || 0)) || 0).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="border-t border-dashed border-white/20 my-3"></div>
+                <div class="text-right font-mono text-[11px] text-stone-400 space-y-0.5">
+                    <p>Subtotal: $${subtotal.toFixed(2)}</p>
+                    <p>I.V.A. 15%: $${iva.toFixed(2)}</p>
+                    <p class="font-black text-sm text-amber-400 pt-1 font-sans">Total: $${total.toFixed(2)}</p>
+                </div>
+            `;
+
+            document.getElementById('modalFactura').classList.remove('hidden');
+        } catch (error) {
+            console.error('Error al cargar factura:', error);
+            mostrarNotificacion('Error al cargar la factura.', 'error');
+        }
+    }
+
+    function cerrarFacturaModal() {
+        document.getElementById('modalFactura')?.classList.add('hidden');
+    }
+
+    function imprimirFacturaArea() {
+        window.print();
+    }
 
             // 3. Motor de filtrado en tiempo real sin recargar página (incluye filtro por fecha)
             function filtrarVentas() {
@@ -1716,7 +1962,7 @@
                 const fechaFiltro = document.getElementById('filtro-fecha-venta').value; // formato yyyy-mm-dd
 
                 // Empezamos con la lista completa
-                let filtrados = ventasLocales.slice();
+                let filtrados = (ventasLocales && ventasLocales.length) ? ventasLocales.slice() : [];
 
                 // Filtrar por término si existe
                 if (termino) {
@@ -1741,14 +1987,17 @@
                     });
                 }
 
-                renderizarTablaVentas(filtrados);
-                // Actualizar estadísticas y gráficos según el conjunto filtrado
+                ventasFiltradas = filtrados;
+                paginaActualCompras = 1;
+                renderizarTablaVentas();
                 if (typeof renderEstadisticasVentas === 'function') renderEstadisticasVentas(filtrados);
             }
 
             async function cargarVentas() {
                 const tbody = document.getElementById('tabla-ventas-body');
-                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-stone-400">Cargando datos...</td></tr>`;
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-stone-400">Cargando datos...</td></tr>`;
+                }
 
                 try {
                     const respuesta = await fetch('/api/admin/historial_ventas'); // Asegúrate de que esta ruta coincida con tu backend
@@ -1756,11 +2005,16 @@
 
                     const ventas = await respuesta.json();
                     ventasLocales = ventas; // Guardamos para el filtro
+                    ventasFiltradas = ventas;
+                    todasLasCompras = ventas;
+                    paginaActualCompras = 1;
                     renderizarTablaVentas(ventas);
                     if (typeof renderEstadisticasVentas === 'function') renderEstadisticasVentas(ventas);
                 } catch (error) {
                     console.error("Error al cargar ventas:", error);
-                    tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-red-400">Error al cargar datos. Verifica el servidor.</td></tr>`;
+                    if (tbody) {
+                        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-red-400">Error al cargar datos. Verifica el servidor.</td></tr>`;
+                    }
                 }
             }
 
@@ -1900,6 +2154,29 @@
                 }
             }
         </script>
-</body>
 
+    <div id="modalFactura" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+        <div class="bg-stone-950 border border-white/10 text-amber-100 rounded-3xl shadow-2xl w-full max-w-xl p-6 relative">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+                <div>
+                    <h2 class="text-base font-black uppercase tracking-wider text-amber-400">Detalle de Factura</h2>
+                    <p class="text-[11px] text-stone-400 mt-0.5">Desglose oficial del pedido</p>
+                </div>
+                <button onclick="cerrarFacturaModal()" class="text-stone-400 hover:text-white transition text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="contenidoFacturaImprimible" class="space-y-4 text-xs text-stone-200 max-h-[55vh] overflow-y-auto pr-1 custom-scrollbar"></div>
+            <div class="mt-6 flex flex-col sm:flex-row gap-3 border-t border-white/10 pt-4">
+                <button onclick="cerrarFacturaModal()" class="flex-1 py-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider transition-all border border-white/5">
+                    Cerrar Vista
+                </button>
+                <button onclick="imprimirFacturaArea()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider transition-all shadow-md active:scale-95">
+                    <i class="fa-solid fa-print mr-1"></i> Imprimir Factura
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
 </html>

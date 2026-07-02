@@ -42,12 +42,11 @@ def registrar_pedidos_mesa(numero_mesa, id_usuario, lista_producto):
         cursor.close()
         db.close()
 
-def obtener_pedido(id_cliente=None):
+def obtener_pedido(id_cliente=None, numero_mesa=None):
     db = conectar_db()
     if db is None:
         return []
     cursor = db.cursor(dictionary=True)
-    # Construimos la consulta base y aplicamos un WHERE cuando se solicita filtrar por cliente
     consulta_sql = """SELECT 
                         pe.id_pedido, 
                         pe.numero_mesa, 
@@ -67,17 +66,24 @@ def obtener_pedido(id_cliente=None):
                     LEFT JOIN clientes cl ON cl.id_cliente = pe.id_cliente
                     """
 
-    params = None
+    condiciones = []
+    params = []
     if id_cliente is not None:
-        consulta_sql += " WHERE pe.id_cliente = %s"
-        params = (int(id_cliente),)
+        condiciones.append("pe.id_cliente = %s")
+        params.append(int(id_cliente))
+    if numero_mesa is not None:
+        condiciones.append("pe.numero_mesa = %s")
+        params.append(int(numero_mesa))
+
+    if condiciones:
+        consulta_sql += " WHERE " + " AND ".join(condiciones)
 
     consulta_sql += " ORDER BY pe.id_pedido DESC"
     pedidos_agrupados = {}
 
     try:
         if params:
-            cursor.execute(consulta_sql, params)
+            cursor.execute(consulta_sql, tuple(params))
         else:
             cursor.execute(consulta_sql)
         pedido = cursor.fetchall()
@@ -194,6 +200,38 @@ def actualizar_pedidos(id_pedido, nuevo_estado):
         if db:
             db.rollback()
         return False
+
+
+def cancelar_pedido(id_pedido):
+    db = conectar_db()
+    if db is None:
+        return False
+
+    try:
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT estado FROM pedidos WHERE id_pedido = %s", (id_pedido,))
+        pedido = cursor.fetchone()
+
+        if not pedido:
+            return False
+
+        estado_actual = str(pedido.get('estado') or '').strip()
+        if estado_actual != 'Pendiente':
+            return False
+
+        cursor.execute("UPDATE pedidos SET estado = %s WHERE id_pedido = %s", ('Cancelado', id_pedido))
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"Error al cancelar el pedido {e}")
+        if db:
+            db.rollback()
+        return False
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if db:
+            db.close()
 
 
 def obtener_pedidos_caja():

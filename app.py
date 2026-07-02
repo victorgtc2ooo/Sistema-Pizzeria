@@ -5,8 +5,8 @@ from src.productos import registrar_producto, obtener_productos, actualizar_prod
 from src.categorias import registrar_categoria, obtener_categorias, actualizar_categoria, obtener_categorias_publicas, cambiar_estado_categoria
 from src.recetas import registrar_recetas, obtener_receta, borrar_ingrediente_de_receta
 from src.inventario import registrar_inventario, obtener_inventario,cambiar_estado_ingrediente, actualizar_inventario, sumar_stock_db
-from src.pedidos import registrar_pedidos_mesa,obtener_pedido,registrar_pedido_domicilio, actualizar_pedidos,obtener_pedidos_caja, registrar_pedido_domicilio, obtener_detalle_completo_pedido
-from src.clientes import registrar_clientes, validar_clientes
+from src.pedidos import registrar_pedidos_mesa,obtener_pedido,registrar_pedido_domicilio, actualizar_pedidos,obtener_pedidos_caja, registrar_pedido_domicilio, obtener_detalle_completo_pedido, cancelar_pedido
+from src.clientes import registrar_clientes, validar_clientes, obtener_clientes, obtener_clientes_paginados, contar_clientes
 from src.pagos import obtener_pagopendiente,registrar_pago_pedido
 
 import os
@@ -97,6 +97,7 @@ def api_regis_producto():
     nombre=request.form.get('nombre')
     precio=request.form.get('precio')
     id_categori=request.form.get('id_categoria')
+    descripcion=request.form.get('descripcion', '')
     archivo_foto=request.files.get('imagen_route')
 
     if not archivo_foto or archivo_foto.filename == '':
@@ -111,7 +112,7 @@ def api_regis_producto():
 
     archivo_foto.save(ruta_segura)
 
-    resultado=registrar_producto(nombre, precio, nombre_limpio, id_categori)
+    resultado=registrar_producto(nombre, precio, nombre_limpio, id_categori, descripcion)
 
     if resultado is True:
         return jsonify({"mensaje" : "El producto ha sido ingresado exitosamente" }), 200
@@ -174,6 +175,9 @@ def api_registrar_inventario():
     stock_inicial=float(datos.get('stock_actual',0))
     stock_minimo=float(datos.get('stock_minimo',0))
     unidad_registrada=datos.get('unidad_registrada')
+
+    if stock_inicial < 0 or stock_minimo < 0:
+        return jsonify({"mensaje": "Los valores de stock no pueden ser negativos"}), 400
     
     resultado=registrar_inventario(nombre_i,stock_inicial,stock_minimo,unidad_registrada)
 
@@ -295,6 +299,7 @@ def api_actualizar_producto(id_producto):
     nombre = request.form.get('nombre')
     precio = request.form.get('precio')
     id_categoria = request.form.get('id_categoria')
+    descripcion = request.form.get('descripcion', '')
     archivo_foto = request.files.get('imagen_route') 
     nombre_limpio = None
 
@@ -305,7 +310,7 @@ def api_actualizar_producto(id_producto):
         nombre_limpio = secure_filename(archivo_foto.filename)
         ruta_segura = os.path.join(app.config['CARPETA_PRODUCTOS'], nombre_limpio)
         archivo_foto.save(ruta_segura)
-    resultado = actualizar_producto(id_producto, nombre, precio, nombre_limpio, id_categoria)
+    resultado = actualizar_producto(id_producto, nombre, precio, nombre_limpio, id_categoria, descripcion)
 
     if resultado is True:
         return jsonify({"mensaje": "El producto ha sido actualizado exitosamente"}), 200
@@ -394,13 +399,18 @@ def api_cambiar_estado_categoria():
 def api_mis_pedidos_activos():
     try:
         id_cliente = request.args.get('id_cliente')
+        numero_mesa = request.args.get('numero_mesa')
 
-        # Si no se proporciona id_cliente, devolvemos lista vacía por seguridad
-        if not id_cliente:
+        if not id_cliente and not numero_mesa:
             return jsonify([]), 200
 
-        # Pedidos ya filtrados por el backend según el cliente
-        todos_los_pedidos = obtener_pedido(int(id_cliente))
+        filtro_id_cliente = int(id_cliente) if id_cliente else None
+        filtro_numero_mesa = int(numero_mesa) if numero_mesa else None
+
+        if filtro_numero_mesa is not None:
+            todos_los_pedidos = obtener_pedido(numero_mesa=filtro_numero_mesa)
+        else:
+            todos_los_pedidos = obtener_pedido(id_cliente=filtro_id_cliente)
 
         if not todos_los_pedidos:
             return jsonify([]), 200
@@ -417,6 +427,42 @@ def api_mis_pedidos_activos():
     except Exception as e:
         print(f"Error crítico en API mis_pedidos_activos: {e}")
         return jsonify({"mensaje": "Error interno al procesar los pedidos"}), 500
+
+@app.route('/api/cliente/historial_compras', methods=['GET'])
+def api_cliente_historial_compras():
+    try:
+        id_cliente = request.args.get('id_cliente')
+        numero_mesa = request.args.get('numero_mesa')
+        if not id_cliente and not numero_mesa:
+            return jsonify([]), 200
+
+        filtro_id_cliente = int(id_cliente) if id_cliente else None
+        filtro_numero_mesa = int(numero_mesa) if numero_mesa else None
+        if filtro_numero_mesa is not None:
+            compras = obtener_pedido(numero_mesa=filtro_numero_mesa)
+        else:
+            compras = obtener_pedido(id_cliente=filtro_id_cliente)
+        if not compras:
+            return jsonify([]), 200
+
+        historial = []
+        for p in compras:
+            estado_crudo = p.get('estado') or p.get('estado_p')
+            estado = str(estado_crudo).strip() if estado_crudo is not None else 'Pendiente'
+            historial.append({
+                'id_pedido': p.get('id_pedido'),
+                'numero_mesa': p.get('numero_mesa'),
+                'origen_pedido': p.get('origen_pedido'),
+                'fecha_p': p.get('fecha_p'),
+                'total_p': p.get('total_p', 0),
+                'estado': estado,
+                'productos': p.get('productos', [])
+            })
+
+        return jsonify(historial), 200
+    except Exception as e:
+        print(f"Error en API cliente historial_compras: {e}")
+        return jsonify({"mensaje": "Error interno al procesar el historial"}), 500
     
 
 @app.route('/api/admin/historial_ventas', methods=['GET'])
@@ -434,6 +480,7 @@ def api_historial_ventas():
             if estado in ['Pagado', 'Entregado', 'Cancelado']:
                 historial.append({
                     "id_pedido": p.get('id_pedido'),
+                    "numero_mesa": p.get('numero_mesa'),
                     "origen_pedido": p.get('origen_pedido', 'No especificado'),
                     "fecha_p": p.get('fecha_p'),
                     "total_p": p.get('total_p', 0),
@@ -559,6 +606,15 @@ def api_pagar_pedido(id_pedido):
         return jsonify({"mensaje": "No se pudo registrar el pago del pedido"}), 500
 
 
+@app.route('/api/pedido/<int:id_pedido>/cancelar', methods=['PUT'])
+def api_cancelar_pedido(id_pedido):
+    resultado = cancelar_pedido(id_pedido)
+
+    if resultado:
+        return jsonify({"mensaje": "El pedido ha sido cancelado"}), 200
+    return jsonify({"mensaje": "No se pudo cancelar el pedido"}), 400
+
+
 @app.route('/api/producto/estado', methods=['PUT'])
 def api_cambiar_estado_producto():
     datos = request.get_json()
@@ -588,12 +644,17 @@ def api_actualizar_inventario():
         if not all([id_inventario, nombre, cantidad_inicial is not None, cantidad_minima is not None, unidad]):
             return jsonify({"mensaje": "Datos del insumo incompletos"}), 400
 
+        cantidad_inicial_num = float(cantidad_inicial)
+        cantidad_minima_num = float(cantidad_minima)
+        if cantidad_inicial_num < 0 or cantidad_minima_num < 0:
+            return jsonify({"mensaje": "Los valores de stock no pueden ser negativos"}), 400
+
         # Convertir a tipos numéricos correctos
         exito = actualizar_inventario(
             int(id_inventario), 
             nombre, 
-            float(cantidad_inicial), 
-            float(cantidad_minima), 
+            cantidad_inicial_num, 
+            cantidad_minima_num, 
             unidad
         )
 
@@ -682,6 +743,23 @@ def vista_registro():
 def vista_admin():
     return render_template('admin.html')
 
+@app.route('/admin/clientes', methods=['GET'])
+def vista_admin_clientes():
+    page = max(int(request.args.get('page', 1)), 1)
+    per_page = 10
+    clientes_registrados = obtener_clientes_paginados(page=page, per_page=per_page)
+    total_clientes = contar_clientes()
+    total_paginas = max((total_clientes + per_page - 1) // per_page, 1)
+
+    return render_template(
+        'admin_clientes.html',
+        clientes=clientes_registrados,
+        page=page,
+        total_paginas=total_paginas,
+        total_clientes=total_clientes,
+        per_page=per_page,
+    )
+
 @app.route('/cajero', methods=['GET'])
 def vista_cajero():
     return render_template('cajero.html')
@@ -691,6 +769,9 @@ def vista_menu_qr():
     numero_mesa = request.args.get('mesa')
     return render_template('index.html', mesa=numero_mesa)
 
+@app.route('/historial_cliente', methods=['GET'])
+def vista_historial_cliente():
+    return render_template('historial_cliente.html')
 
 
 # ============== funciones de eliminaciones 

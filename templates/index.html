@@ -55,20 +55,37 @@
             box-shadow: 0 28px 80px rgba(0, 0, 0, 0.18);
         }
 
+        #detallePedidoModal {
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s linear 0.5s, opacity 0.5s ease-in-out;
+        }
+
         #detallePedidoModal.activo {
             visibility: visible;
             opacity: 1;
             pointer-events: auto;
+            transition: visibility 0s linear 0s, opacity 0.5s ease-in-out;
         }
+
+        /* Estado inicial del panel: pequeño, metido en la esquina inferior derecha y transparente */
+        #detalleContenido {
+            transform: translate(30%, 40%) scale(0.1);
+            opacity: 0;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease-in-out;
+        }
+
+        /* Estado activo: viaja suavemente al centro (0,0) y toma su tamaño real (scale-100) */
         #detallePedidoModal.activo #detalleContenido {
-            transform: scale(1);
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
         }
 
     </style>
 </head>
 <body class="bg-pizza-overlay text-amber-50/90 min-h-screen font-sans antialiased relative">
 
-    <div id="contenedorToasts" class="fixed top-6 right-6 z-50 space-y-4 max-w-sm w-full pointer-events-none"></div>
+    <div id="contenedorToasts" class="fixed bottom-6 left-6 z-50 space-y-4 max-w-sm w-full pointer-events-none"></div>
 
         <nav class="glass-panel border-b border-white/20 px-6 py-4 flex justify-between items-center sticky top-0 z-50 transition-all duration-300">
         <h1 class="text-2xl font-black bg-gradient-to-r from-amber-400 via-orange-400 to-red-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-200 cursor-pointer tracking-wider">
@@ -76,6 +93,9 @@
         </h1>
         <div class="flex items-center gap-4">
             <span id="nombreUsuario" class="text-amber-100/90 text-sm font-medium tracking-wide glass-soft px-3 py-1.5 rounded-xl border border-white/10"></span>
+            <button id="btnHistorialCompras" onclick="irHistorialCompras()" class="text-xs glass-soft hover:bg-amber-500/20 text-amber-100 hover:text-white border border-white/10 px-4 py-2 rounded-xl transition-all duration-200 active:scale-95 font-semibold">
+                <i class="fa-solid fa-clock-rotate-left mr-2"></i> Historial
+            </button>
             <button onclick="cerrarSesion()" class="text-xs glass-soft hover:bg-red-500/40 text-red-300 hover:text-white border border-red-500/30 px-4 py-2 rounded-xl transition-all duration-200 active:scale-95 font-semibold">
                 Salir
             </button>
@@ -205,7 +225,7 @@
             <div id="detallePedidoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 invisible opacity-0 pointer-events-none transition-all duration-500 ease-out">
                 <div id="detalleOverlay" onclick="cerrarDetalleAnimado()" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
                 
-                <div id="detalleContenido" class="relative bg-stone-900/95 border border-white/20 w-full max-w-md rounded-3xl p-6 text-white shadow-2xl transform scale-0 origin-bottom-right transition-all duration-500 ease-out backdrop-blur-md">
+                <div id="detalleContenido" class="relative bg-stone-900/95 border border-white/20 w-full max-w-md rounded-3xl p-6 text-white shadow-2xl transition-all backdrop-blur-md">
                     
                     <button onclick="cerrarDetalleAnimado()" class="absolute top-5 right-5 text-stone-400 hover:text-red-400 transition text-xl" style="outline: none;">
                         <i class="fa-solid fa-xmark"></i>
@@ -225,6 +245,30 @@
                     <div class="border-t border-white/10 pt-4 mt-4 flex justify-between items-center font-bold text-base">
                         <span class="text-stone-300 font-medium">Total Pagado:</span>
                         <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-500 text-2xl font-black tracking-tight" id="det_total">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="confirmCancelModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 invisible opacity-0 pointer-events-none transition-all duration-300 ease-out">
+                <div onclick="cerrarConfirmacionCancelacion()" class="absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
+                <div class="relative bg-stone-900/95 border border-white/15 w-full max-w-sm rounded-3xl p-6 text-white shadow-2xl backdrop-blur-md">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2.5 rounded-xl bg-red-500/15 text-red-300 border border-red-500/20">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-amber-100 tracking-wide">Cancelar pedido</h3>
+                            <p class="text-[11px] text-stone-400">Esta acción no se puede deshacer.</p>
+                        </div>
+                    </div>
+                    <p id="confirmCancelText" class="text-sm text-stone-300 leading-relaxed">¿Deseas cancelar este pedido?</p>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button onclick="cerrarConfirmacionCancelacion()" class="px-4 py-2 rounded-xl text-sm font-semibold border border-white/15 bg-white/10 text-stone-200 hover:bg-white/20 transition-all">
+                            No, mantenerlo
+                        </button>
+                        <button id="btnConfirmarCancelacion" onclick="confirmarCancelacionPedido()" class="px-4 py-2 rounded-xl text-sm font-semibold border border-red-500/30 bg-red-500/15 text-red-200 hover:bg-red-500/25 transition-all">
+                            Sí, cancelar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -275,7 +319,7 @@
 
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
+                toast.style.transform = 'translateY(10px)';
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
         }
@@ -357,7 +401,7 @@
                         <div class="p-5 flex-1 flex flex-col justify-between">
                             <div>
                                 <h3 class="text-lg font-bold text-amber-50 hover:text-amber-400 transition-colors tracking-wide">${p.nombre_pr}</h3>
-                                <p class="text-stone-200 text-xs leading-relaxed mt-1">${p.descripcion || 'Sin descripción disponible.'}</p>
+                                <p class="text-stone-200 text-xs leading-relaxed mt-1">${p.descripcion_pr || p.descripcion || 'Sin descripción disponible.'}</p>
                             </div>
                             <div class="flex justify-between items-center mt-6">
                                 <span class="text-xl font-black text-amber-400">$${parseFloat(p.precio_pr).toFixed(2)}</span>
@@ -443,6 +487,14 @@
         function cerrarSesion() {
             localStorage.clear();
             window.location.href = '/';
+        }
+
+        function irHistorialCompras() {
+            if (!idCliente) {
+                mostrarNotificacion('Debes iniciar sesión como cliente para ver tu historial.', 'error');
+                return;
+            }
+            window.location.href = '/historial_cliente';
         }
 
         async function enviarPedido() {
@@ -558,9 +610,16 @@
 
             try {
                 const idSesion = localStorage.getItem('id_cliente');
-                const url = idSesion 
-                    ? `http://127.0.0.1:5000/api/mis_pedidos_activos?id_cliente=${idSesion}`
-                    : `http://127.0.0.1:5000/api/mis_pedidos_activos`;
+                const params = new URLSearchParams();
+
+                if (idSesion) {
+                    params.append('id_cliente', idSesion);
+                }
+                if (numeroMesaActual) {
+                    params.append('numero_mesa', numeroMesaActual);
+                }
+
+                const url = `http://127.0.0.1:5000/api/mis_pedidos_activos${params.toString() ? `?${params.toString()}` : ''}`;
 
                 const respuesta = await fetch(url);
                 if (!respuesta.ok) throw new Error('Error al conectar con la API de pedidos');
@@ -616,26 +675,34 @@
                     const totalMostrado = parseFloat(pedido.total_p || 0).toFixed(2);
                     const fechaFormateada = pedido.fecha_p ? new Date(pedido.fecha_p).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Reciente';
 
+                    const esCancelable = estadoNormalizado === 'Pendiente';
+
                     contenedor.innerHTML += `
-                        <div class="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center justify-between transition-all hover:bg-white/10 hover:border-amber-500/40 cursor-pointer fade-in" 
-                             data-id="${idMostrado}" 
-                             onclick="abrirDetallePedido('${idMostrado}')">
-                            <div class="space-y-1">
+                        <div class="bg-white/5 border border-white/10 rounded-2xl p-3.5 transition-all hover:bg-white/10 hover:border-amber-500/40 fade-in">
+                            <div class="flex items-center justify-between cursor-pointer" data-id="${idMostrado}" onclick="abrirDetallePedido('${idMostrado}')">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-amber-100">Pedido #${idMostrado}</span>
+                                        <span class="text-[10px] text-stone-400 flex items-center gap-1">
+                                            <i class="fa-regular fa-clock text-amber-400/50"></i> ${fechaFormateada}
+                                        </span>
+                                    </div>
+                                    <div class="text-xs font-black text-amber-400">
+                                        Total: $${totalMostrado}
+                                    </div>
+                                </div>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs font-bold text-amber-100">Pedido #${idMostrado}</span>
-                                    <span class="text-[10px] text-stone-400 flex items-center gap-1">
-                                        <i class="fa-regular fa-clock text-amber-400/50"></i> ${fechaFormateada}
+                                    <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 border capitalize ${claseEstado}">
+                                        <i class="fa-solid ${iconoEstado}"></i>
+                                        ${estadoNormalizado}
                                     </span>
                                 </div>
-                                <div class="text-xs font-black text-amber-400">
-                                    Total: $${totalMostrado}
-                                </div>
                             </div>
-                            <div class="flex items-center">
-                                <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 border capitalize ${claseEstado}">
-                                    <i class="fa-solid ${iconoEstado}"></i>
-                                    ${estadoNormalizado}
-                                </span>
+                            <div class="mt-3 flex justify-end">
+                                <button type="button" class="px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition-all ${esCancelable ? 'bg-red-500/15 border-red-500/30 text-red-300 hover:bg-red-500/25' : 'bg-stone-700/50 border-stone-600/40 text-stone-400 cursor-not-allowed'}" ${esCancelable ? '' : 'disabled'} onclick="event.stopPropagation(); abrirConfirmacionCancelacion('${idMostrado}')">
+                                    <i class="fa-solid fa-ban mr-1"></i>
+                                    ${esCancelable ? 'Cancelar pedido' : 'Cancelación no disponible'}
+                                </button>
                             </div>
                         </div>
                     `;
@@ -709,6 +776,50 @@
             } catch (error) {
                 console.error("Error al obtener el detalle del pedido:", error);
                 mostrarNotificacion("Error de comunicación con el servidor al cargar detalles.", 'error');
+            }
+        }
+
+        let pedidoIdParaCancelar = null;
+
+        function abrirConfirmacionCancelacion(idPedido) {
+            pedidoIdParaCancelar = idPedido;
+            const modal = document.getElementById('confirmCancelModal');
+            const texto = document.getElementById('confirmCancelText');
+            if (modal && texto) {
+                texto.innerText = `¿Deseas cancelar el pedido #${idPedido}?`;
+                modal.classList.remove('invisible', 'opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function cerrarConfirmacionCancelacion() {
+            const modal = document.getElementById('confirmCancelModal');
+            if (modal) {
+                modal.classList.add('invisible', 'opacity-0', 'pointer-events-none');
+            }
+            pedidoIdParaCancelar = null;
+        }
+
+        async function confirmarCancelacionPedido() {
+            if (!pedidoIdParaCancelar) return;
+
+            try {
+                const respuesta = await fetch(`http://127.0.0.1:5000/api/pedido/${pedidoIdParaCancelar}/cancelar`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await respuesta.json();
+                if (!respuesta.ok) {
+                    mostrarNotificacion(data.mensaje || 'No se pudo cancelar el pedido.', 'error');
+                } else {
+                    mostrarNotificacion('Pedido cancelado correctamente.', 'exito');
+                    actualizarEstadoPedidosCliente();
+                }
+            } catch (error) {
+                console.error('Error al cancelar el pedido:', error);
+                mostrarNotificacion('No se pudo conectar con el servidor.', 'error');
+            } finally {
+                cerrarConfirmacionCancelacion();
             }
         }
 

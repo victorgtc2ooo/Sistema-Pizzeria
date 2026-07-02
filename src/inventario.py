@@ -2,6 +2,9 @@ from database.db import conectar_db
 from flask import jsonify
 
 def registrar_inventario(nombre,cantidad_inicial,cantidad_minima,unidad):
+    if cantidad_inicial < 0 or cantidad_minima < 0:
+        return False
+
     db=conectar_db()
 
     if db is None:
@@ -70,6 +73,9 @@ def cambiar_estado_ingrediente(id_inventario, nuevo_estado):
 
 
 def actualizar_inventario(id_inventario, nombre, cantidad_inicial, cantidad_minima, unidad):
+    if cantidad_inicial < 0 or cantidad_minima < 0:
+        return False
+
     db = conectar_db()
     if db is None:
         return False

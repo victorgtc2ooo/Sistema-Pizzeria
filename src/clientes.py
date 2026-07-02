@@ -39,6 +39,60 @@ def registrar_clientes(nombre, apellido, correo, password, telefono, direccion):
         db.close()
 
 
+def obtener_clientes():
+    return obtener_clientes_paginados(page=1, per_page=1000)
+
+
+def obtener_clientes_paginados(page=1, per_page=10):
+    db = conectar_db()
+    if db is None:
+        return []
+
+    cursor = db.cursor()
+    try:
+        offset = max((page - 1) * per_page, 0)
+        cursor.execute(
+            "SELECT id_cliente, nombre_cl, apellido_cl, correo_cl, telefono_cl, direccion FROM clientes ORDER BY id_cliente DESC LIMIT %s OFFSET %s",
+            (per_page, offset),
+        )
+        resultados = cursor.fetchall()
+        clientes = []
+        for fila in resultados:
+            clientes.append({
+                'id_cliente': fila[0],
+                'nombre': fila[1],
+                'apellido': fila[2],
+                'correo': fila[3],
+                'telefono': fila[4],
+                'direccion': fila[5]
+            })
+        return clientes
+    except Exception as e:
+        print(f"Error al obtener clientes: {e}")
+        return []
+    finally:
+        cursor.close()
+        db.close()
+
+
+def contar_clientes():
+    db = conectar_db()
+    if db is None:
+        return 0
+
+    cursor = db.cursor()
+    try:
+        cursor.execute("SELECT COUNT(*) FROM clientes")
+        resultado = cursor.fetchone()
+        return int(resultado[0]) if resultado else 0
+    except Exception as e:
+        print(f"Error al contar clientes: {e}")
+        return 0
+    finally:
+        cursor.close()
+        db.close()
+
+
 def validar_clientes(correo, password):
     db = conectar_db()
     if db is None:

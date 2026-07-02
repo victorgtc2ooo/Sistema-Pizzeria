@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # 🦫 Servidor de Base de Datos (MySQL)
+  db:
+    image: mysql:8.0
+    container_name: pizzeria_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'Victor12345#' # Usa la contraseña robusta de tu proyecto
+      MYSQL_DATABASE: 'pizzeria'          # Pon el nombre exacto de tu base de datos
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # 🟢 Mapeamos la carpeta que contiene tus archivos .sql para que se monten en Docker
+      - ./DB_Pizzeria:/docker-entrypoint-initdb.d
+
+  # 🐍 Tu Backend (Flask)
+  web:
+    build: .
+    container_name: pizzeria_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - MYSQL_HOST=db          # Coincide con Config.MYSQL_HOST
+      - MYSQL_USER=root        # Coincide con Config.MYSQL_USER
+      - MYSQL_PASSWORD=Victor12345#
+      - MYSQL_DB=pizzeria      # Coincide con Config.MYSQL_DB
+    depends_on:
+      - db
+    volumes:
+      # 🟢 Esto soluciona los permisos de subida en Linux automáticamente y no rompe Windows
+      - uploads_productos:/app/static/uploads/productos
+      - uploads_categorias:/app/static/uploads/categorias
+
+volumes:
+  db_data:
+  # 🟢 Declaramos los espacios de almacenamiento para que Docker los gestione de forma nativa
+  uploads_productos:
+  uploads_categorias:

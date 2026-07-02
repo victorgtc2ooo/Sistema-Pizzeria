@@ -1,0 +1,10 @@
+# Caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# Docker temporales
+.docker/

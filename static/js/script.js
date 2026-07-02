@@ -158,7 +158,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (data.perfil.Tipo === 'cliente') {
                             window.location.href = '/index';
                         } else {
-                            window.location.href = '/' + data.perfil.Rol.toLowerCase();
+                            // Mapeo explícito de roles (coincide con las rutas definidas en Flask)
+                            const rol = data.perfil.Rol || '';
+                            const rutas = {
+                                'Administrador': '/admin',
+                                'Cocina': '/cocina',
+                                'Mesero': '/cajero'
+                            };
+                            const ruta = rutas[rol] || ('/' + rol.toLowerCase());
+                            window.location.href = ruta;
                         }
                     }, 1200);
                 } else {

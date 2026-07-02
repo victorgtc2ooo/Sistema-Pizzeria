@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizzería Premium - Historial de Compras</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ==========================================================================
+           📷 DISEÑO DE FONDO UNIFICADO (Identidad rústica de la pizzería)
+           ========================================================================== */
+        :root {
+            --url-fondo-pizzeria: url('https://alicante.com.ar/wp-content/uploads/2022/06/iStock-1048461158-Pizza-especial-2000x1333.jpg');
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Capa superpuesta premium */
+        .bg-pizza-overlay {
+            background: linear-gradient(to bottom, rgba(28, 15, 10, 0.90), rgba(12, 6, 4, 0.96)), 
+                        var(--url-fondo-pizzeria) no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(251, 191, 36, 0.2);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(251, 191, 36, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-pizza-overlay text-amber-50/90 min-h-screen font-sans flex flex-col antialiased">
+
+    <!-- Contenedor para Notificaciones -->
+    <div id="contenedorToasts" class="fixed top-6 right-6 z-50 space-y-4 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- Barra de Navegación Premium -->
+    <nav class="bg-stone-950/40 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center sticky top-0 z-40 shadow-xl">
+        <div class="flex items-center gap-3">
+            <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-stone-950 shadow-lg shadow-orange-500/10 text-base font-bold">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+                <h1 id="tituloCliente" class="text-xl font-black tracking-wider bg-gradient-to-r from-amber-400 via-orange-400 to-red-500 bg-clip-text text-transparent uppercase">
+                    Historial de Compras
+                </h1>
+                <p class="text-[11px] text-stone-400 font-medium">Pedidos registrados solo para tu cuenta.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='/index'" class="text-xs bg-white/10 hover:bg-white/20 text-amber-100 hover:text-white font-bold py-2.5 px-4 rounded-xl transition-all border border-white/10 shadow-sm flex items-center gap-2 uppercase tracking-wide">
+                <i class="fa-solid fa-house opacity-80"></i> Volver al Menú
+            </button>
+            <button onclick="cerrarSesion()" class="text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 font-bold py-2.5 px-4 rounded-xl transition-all border border-red-500/30 shadow-sm flex items-center gap-2 uppercase tracking-wide">
+                <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 p-6 max-w-[1400px] w-full mx-auto space-y-6">
+        
+        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 class="text-md font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2.5">
+                        <i class="fa-solid fa-receipt text-orange-500"></i> Tus Compras Realizadas
+                    </h2>
+                    <p class="text-xs text-stone-400 mt-1">Busca por pedido, estado o fecha.</p>
+                </div>
+                <!-- Buscadores Estilo Premium -->
+                <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <input id="buscar-compra" oninput="filtrarHistorialVentas()" type="text" placeholder="Buscar pedido..." class="w-full sm:w-72 py-2.5 px-4 rounded-xl bg-stone-950/50 border border-white/10 text-xs text-white focus:outline-none focus:border-amber-500 transition-all placeholder-stone-500" />
+                    <input id="filtro-fecha-compra" onchange="filtrarHistorialVentas()" type="date" class="w-full sm:w-48 py-2.5 px-4 rounded-xl bg-stone-950/50 border border-white/10 text-xs text-white focus:outline-none focus:border-amber-500 transition-all text-stone-300" />
+                </div>
+            </div>
+
+            <!-- Panel de la Tabla Estilo Caja -->
+            <div class="overflow-x-auto rounded-2xl border border-white/10 bg-stone-950/20">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-white/5 bg-black/30 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <th class="py-4 px-5">ID Pedido</th>
+                            <th class="py-4 px-5">Origen</th>
+                            <th class="py-4 px-5">Fecha</th>
+                            <th class="py-4 px-5 text-right">Total</th>
+                            <th class="py-4 px-5">Estado</th>
+                            <th class="py-4 px-5 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-historial-cliente-body" class="divide-y divide-white/5 text-xs text-stone-200">
+                        <tr><td colspan="6" class="py-12 text-center text-stone-400">Cargando historial...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Controles de Paginación -->
+            <div class="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-400">
+                <span id="infoPaginacionHistorial" class="font-medium tracking-wide">Página 1 de 1</span>
+                <div class="flex gap-2">
+                    <button id="btnPrevHistorial" onclick="cambiarPaginaHistorial(-1)" class="px-4 py-2 rounded-xl bg-stone-950/60 border border-white/10 hover:bg-stone-900 text-stone-300 disabled:opacity-30 transition-all font-bold uppercase tracking-wider text-[10px]">Anterior</button>
+                    <button id="btnNextHistorial" onclick="cambiarPaginaHistorial(1)" class="px-4 py-2 rounded-xl bg-stone-950/60 border border-white/10 hover:bg-stone-900 text-stone-300 disabled:opacity-30 transition-all font-bold uppercase tracking-wider text-[10px]">Siguiente</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Factura del Cliente Estilo Rústico -->
+    <div id="modalFacturaCliente" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+        <div class="bg-stone-950 border border-white/10 text-amber-100 w-full max-w-xl rounded-3xl p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+                <div>
+                    <h2 class="text-base font-black uppercase tracking-wider text-amber-400">Detalle de Factura</h2>
+                    <p class="text-[11px] text-stone-400 mt-0.5">Desglose oficial de tu consumo</p>
+                </div>
+                <button onclick="cerrarFacturaModalCliente()" class="text-stone-400 hover:text-white transition text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div id="contenidoFacturaCliente" class="space-y-4 text-xs text-stone-200 max-h-[55vh] overflow-y-auto pr-1 custom-scrollbar">
+                <!-- Se inyecta dinámicamente -->
+            </div>
+            
+            <div class="mt-6 flex flex-col sm:flex-row gap-3 border-t border-white/10 pt-4">
+                <button onclick="cerrarFacturaModalCliente()" class="flex-1 py-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider transition-all border border-white/5">
+                    Cerrar Vista
+                </button>
+                <button onclick="imprimirFacturaCliente()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider transition-all shadow-md active:scale-95">
+                    <i class="fa-solid fa-print mr-1"></i> Imprimir Factura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // RECONEXIÓN DE TU LÓGICA ORIGINAL EXACTA SIN ALTERAR VARIABLES
+        const idCliente = localStorage.getItem('id_cliente');
+        const nombreCliente = localStorage.getItem('nombre_cliente');
+        let comprasLocales = [];
+        let comprasFiltradas = [];
+        let paginaActualHistorial = 1;
+        const filasPorPaginaHistorial = 10;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!idCliente) {
+                window.location.href = '/';
+                return;
+            }
+            document.getElementById('tituloCliente').innerText = `Historial de compras de ${nombreCliente || 'Cliente'}`;
+            cargarHistorialCompras();
+        });
+
+        function mostrarNotificacion(mensaje, tipo = 'exito') {
+            const contenedor = document.getElementById('contenedorToasts');
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-3 p-4 rounded-2xl border backdrop-blur-md shadow-xl transition-all duration-300 fade-in pointer-events-auto
+                ${tipo === 'exito' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-100' : 'bg-red-500/20 border-red-500/30 text-red-100'}`;
+            toast.innerHTML = `<i class="fa-solid ${tipo === 'exito' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i><p class="text-sm font-semibold">${mensaje}</p>`;
+            contenedor.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3500);
+        }
+
+        async function cargarHistorialCompras() {
+            const tbody = document.getElementById('tabla-historial-cliente-body');
+            tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-stone-400">Cargando historial...</td></tr>`;
+            try {
+                const respuesta = await fetch(`/api/cliente/historial_compras?id_cliente=${idCliente}`);
+                if (!respuesta.ok) throw new Error('Error al cargar historial');
+                const compras = await respuesta.json();
+                comprasLocales = compras;
+                comprasFiltradas = compras;
+                paginaActualHistorial = 1;
+                renderizarTablaHistorialVentas();
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-red-400">No se pudo cargar el historial de compras.</td></tr>`;
+            }
+        }
+
+        function filtrarHistorialVentas() {
+            const termino = document.getElementById('buscar-compra').value.toLowerCase().trim();
+            const fechaFiltro = document.getElementById('filtro-fecha-compra').value;
+            let filtrados = comprasLocales.slice();
+            if (termino) {
+                filtrados = filtrados.filter(c =>
+                    c.id_pedido.toString().includes(termino) ||
+                    (c.origen_pedido || '').toLowerCase().includes(termino) ||
+                    (c.estado || '').toLowerCase().includes(termino)
+                );
+            }
+            if (fechaFiltro) {
+                filtrados = filtrados.filter(c => {
+                    if (!c.fecha_p) return false;
+                    const d = new Date(c.fecha_p);
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    return `${yyyy}-${mm}-${dd}` === fechaFiltro;
+                });
+            }
+            comprasFiltradas = filtrados;
+            paginaActualHistorial = 1;
+            renderizarTablaHistorialVentas();
+        }
+
+        function renderizarTablaHistorialVentas() {
+            const tbody = document.getElementById('tabla-historial-cliente-body');
+            tbody.innerHTML = '';
+            const datos = comprasFiltradas;
+            if (!datos.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-stone-400">No hay compras para mostrar.</td></tr>`;
+                actualizarControlesPaginacionHistorial(0);
+                return;
+            }
+            const inicio = (paginaActualHistorial - 1) * filasPorPaginaHistorial;
+            const fin = inicio + filasPorPaginaHistorial;
+            const visibles = datos.slice(inicio, fin);
+            visibles.forEach(compra => {
+                const origen = compra.numero_mesa ? `Mesa ${compra.numero_mesa}` : (compra.origen_pedido || 'A domicilio');
+                const fecha = compra.fecha_p ? compra.fecha_p.substring(0, 16) : '--';
+                const total = parseFloat(compra.total_p || 0).toFixed(2);
+                const estado = compra.estado || 'Pendiente';
+                let claseEstado = 'bg-amber-500/10 text-amber-300 border-amber-500/20';
+                if (estado === 'Pagado' || estado === 'Entregado') claseEstado = 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20';
+                if (estado === 'Cancelado') claseEstado = 'bg-red-500/10 text-red-300 border-red-500/20';
+                tbody.innerHTML += `
+                    <tr class="border-t border-white/5 hover:bg-white/[0.02] transition-colors">
+                        <td class="py-4 px-5 font-bold font-mono text-amber-200">#${compra.id_pedido}</td>
+                        <td class="py-4 px-5 text-stone-300 font-medium">${origen}</td>
+                        <td class="py-4 px-5 text-stone-400 font-medium">${fecha}</td>
+                        <td class="py-4 px-5 text-right font-black text-amber-400 text-sm">$${total}</td>
+                        <td class="py-4 px-5"><span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${claseEstado}">${estado}</span></td>
+                        <td class="py-4 px-5 text-center"><button onclick="prepararYMostrarFacturaCliente(${compra.id_pedido})" class="text-xs font-bold uppercase tracking-wider bg-amber-500/10 text-amber-200 px-3 py-1.5 rounded-xl border border-amber-500/20 hover:bg-amber-500/15 transition-all">Factura</button></td>
+                    </tr>
+                `;
+            });
+            actualizarControlesPaginacionHistorial(datos.length);
+        }
+
+        function actualizarControlesPaginacionHistorial(total) {
+            const totalPaginas = Math.max(1, Math.ceil(total / filasPorPaginaHistorial));
+            const btnPrev = document.getElementById('btnPrevHistorial');
+            const btnNext = document.getElementById('btnNextHistorial');
+            const info = document.getElementById('infoPaginacionHistorial');
+            if (info) info.innerText = `Página ${paginaActualHistorial} de ${totalPaginas}`;
+            if (btnPrev) btnPrev.disabled = paginaActualHistorial <= 1;
+            if (btnNext) btnNext.disabled = paginaActualHistorial >= totalPaginas;
+        }
+
+        function cambiarPaginaHistorial(direccion) {
+            const totalPaginas = Math.max(1, Math.ceil(comprasFiltradas.length / filasPorPaginaHistorial));
+            paginaActualHistorial = Math.min(Math.max(1, paginaActualHistorial + direccion), totalPaginas);
+            renderizarTablaHistorialVentas();
+        }
+
+        async function prepararYMostrarFacturaCliente(idPedido) {
+            const respuesta = await fetch(`/api/pedido/${idPedido}`);
+            const data = await respuesta.json();
+            if (!respuesta.ok) {
+                mostrarNotificacion(data.mensaje || 'No se pudo cargar la factura.', 'error');
+                return;
+            }
+            const total = parseFloat(data.total || 0);
+            const subtotal = total / 1.15;
+            const iva = total - subtotal;
+            const contenido = document.getElementById('contenidoFacturaCliente');
+            contenido.innerHTML = `
+                <div class="space-y-1 text-stone-200 font-mono">
+                    <div class="font-black uppercase tracking-wider text-sm text-center text-amber-400 font-sans">PIZZERÍA EL INGE</div>
+                    <div class="border-b border-dashed border-white/10 my-2"></div>
+                    <div class="grid grid-cols-2 gap-1 text-[11px] text-stone-400">
+                        <div><b>Factura:</b> #${data.id_pedido || '--'}</div>
+                        <div class="text-right"><b>Estado:</b> ${data.estado || '--'}</div>
+                        <div class="col-span-2"><b>Fecha:</b> ${data.fecha_p || '--'}</div>
+                    </div>
+                </div>
+                <div class="border-t border-dashed border-white/20 my-3"></div>
+                <div>
+                    <table class="w-full text-left text-[11px] font-mono text-stone-300">
+                        <thead class="text-stone-500 uppercase text-[10px] font-bold border-b border-white/10">
+                            <tr>
+                                <th class="pb-1">Cant</th>
+                                <th class="pb-1">Producto</th>
+                                <th class="pb-1 text-right">P.U.</th>
+                                <th class="pb-1 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            ${Array.isArray(data.productos) ? data.productos.map(item => `
+                                <tr>
+                                    <td class="py-2 font-bold text-amber-400">x${item.cantidad_v || item.cantidad || 0}</td>
+                                    <td class="py-2 text-stone-200">${item.nombre_pr || item.nombre_pizza || 'Producto'}</td>
+                                    <td class="py-2 text-right">$${parseFloat(item.precio_unitario || 0).toFixed(2)}</td>
+                                    <td class="py-2 text-right text-white">$${((parseFloat(item.precio_unitario || 0) * parseFloat(item.cantidad_v || item.cantidad || 0)) || 0).toFixed(2)}</td>
+                                </tr>
+                            `).join('') : ''}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="border-t border-dashed border-white/20 my-3"></div>
+                <div class="text-right font-mono text-[11px] text-stone-400 space-y-0.5">
+                    <p>Subtotal: $${subtotal.toFixed(2)}</p>
+                    <p>I.V.A. 15%: $${iva.toFixed(2)}</p>
+                    <p class="font-black text-sm text-amber-400 pt-1 font-sans">Total: $${total.toFixed(2)}</p>
+                </div>
+            `;
+            document.getElementById('modalFacturaCliente').classList.remove('hidden');
+        }
+
+        function cerrarFacturaModalCliente() {
+            document.getElementById('modalFacturaCliente')?.classList.add('hidden');
+        }
+
+        function imprimirFacturaCliente() {
+            window.print();
+        }
+
+        function cerrarSesion() {
+            localStorage.clear();
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
